@@ -2,30 +2,52 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import useSWR from "swr"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 
 import type { Product } from "@/lib/products"
+import { fetcher } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { formatARS } from "@/lib/format"
 
-interface ProductCarouselProps {
-  products: Product[]
-}
+const CAROUSEL_LIMIT = 10
+const REFRESH_INTERVAL = 30000
 
-export function ProductCarousel({ products }: ProductCarouselProps) {
+export function ProductCarousel() {
+  const { data, isLoading } = useSWR<{ products: Product[] }>(
+    "/api/products",
+    fetcher,
+    { refreshInterval: REFRESH_INTERVAL, revalidateOnFocus: true }
+  )
+
+  const products = (data?.products ?? []).slice(0, CAROUSEL_LIMIT)
   const [current, setCurrent] = useState(0)
 
-  const next = () => setCurrent((c) => (c + 1) % products.length)
-  const prev = () => setCurrent((c) => (c - 1 + products.length) % products.length)
+  const next = () => setCurrent((c) => (c + 1) % (products.length || 1))
+  const prev = () => setCurrent((c) => (c - 1 + products.length) % (products.length || 1))
 
   useEffect(() => {
-    const timer = setInterval(next, 1500)
+    if (products.length === 0) return
+    const timer = setInterval(() => {
+      setCurrent((c) => (c + 1) % products.length)
+    }, 1500)
     return () => clearInterval(timer)
-  }, [])
+  }, [products.length])
+
+  if (isLoading) {
+    return (
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    )
+  }
 
   if (products.length === 0) return null
 
-  const product = products[current]
+  const safeIndex = current % products.length
+  const product = products[safeIndex]
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
@@ -49,10 +71,20 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
             </div>
           </div>
           <div className="relative flex items-center justify-center">
-            <div className="aspect-square w-full max-w-md rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center p-12">
-              <span className="text-8xl font-bold text-primary/20 sm:text-9xl">
-                {product.name.charAt(0)}
-              </span>
+            <div className="aspect-square w-full max-w-md overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5">
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center p-12">
+                  <span className="text-8xl font-bold text-primary/20 sm:text-9xl">
+                    {product.name.charAt(0)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -67,7 +99,7 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
                 key={i}
                 onClick={() => setCurrent(i)}
                 className={`h-2 rounded-full transition-all ${
-                  i === current ? "w-6 bg-primary" : "w-2 bg-primary/30"
+                  i === safeIndex ? "w-6 bg-primary" : "w-2 bg-primary/30"
                 }`}
               />
             ))}

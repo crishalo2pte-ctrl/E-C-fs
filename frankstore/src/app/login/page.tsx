@@ -20,13 +20,6 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      router.replace('/')
-    }
-  }, [router])
-
-  useEffect(() => {
     const from = searchParams.get('from')
     if (from) {
       localStorage.setItem('redirectPath', from)
@@ -61,8 +54,12 @@ function LoginForm() {
       
       if (data.user.role === 'admin') {
         router.push('/admin')
+      } else if (mode === 'register') {
+        router.push('/profile')
       } else {
-        router.push('/')
+        const stored = localStorage.getItem('redirectPath')
+        localStorage.removeItem('redirectPath')
+        router.push(stored || '/')
       }
       
     } catch (error) {

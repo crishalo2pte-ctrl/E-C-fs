@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { DEFAULT_USER_ID } from "@/lib/api"
+import { requireAuth } from "@/lib/auth-middleware"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const orders = await prisma.order.findMany({
-    where: { userId: DEFAULT_USER_ID },
+    where: { userId: auth.userId },
     include: { items: true },
     orderBy: { createdAt: "desc" },
   })
@@ -15,6 +18,7 @@ export async function GET() {
     date: o.createdAt.toLocaleDateString("es-AR", { year: "numeric", month: "short", day: "numeric" }),
     status: o.status,
     total: o.total,
+    currency: o.currency,
     paymentMethod: o.paymentMethod,
     address: o.addressSnapshot,
     items: o.items.map((i) => ({
@@ -28,6 +32,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const body = await request.json()
   const { items, address, paymentMethod, notes } = body
 
@@ -37,15 +44,20 @@ export async function POST(request: NextRequest) {
 
   const total = items.reduce((sum: number, i: { price: number; quantity: number }) => sum + i.price * i.quantity, 0)
 
-  const lastOrder = await prisma.order.findFirst({ orderBy: { createdAt: "desc" } })
+  const year = new Date().getFullYear()
+  const lastOrder = await prisma.order.findFirst({
+    where: { number: { startsWith: `FS-${year}-` } },
+    orderBy: { number: "desc" },
+  })
   const lastNumber = lastOrder ? parseInt(lastOrder.number.split("-").pop() ?? "0", 10) : 0
-  const number = `FS-${new Date().getFullYear()}-${String(lastNumber + 1).padStart(4, "0")}`
+  const number = `FS-${year}-${String(lastNumber + 1).padStart(4, "0")}`
 
   const order = await prisma.order.create({
     data: {
       number,
-      userId: DEFAULT_USER_ID,
+      userId: auth.userId,
       total,
+      currency: "ARS",
       paymentMethod,
       addressSnapshot: address,
       notes: notes ?? null,

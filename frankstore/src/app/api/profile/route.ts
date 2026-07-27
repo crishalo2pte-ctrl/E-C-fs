@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { DEFAULT_USER_ID } from "@/lib/api"
+import { requireAuth } from "@/lib/auth-middleware"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const user = await prisma.user.findUnique({
-    where: { id: DEFAULT_USER_ID },
+    where: { id: auth.userId },
   })
 
   if (!user) {
@@ -18,18 +21,21 @@ export async function GET() {
     email: user.email,
     phone: user.phone,
     avatar: user.avatar,
-    level: user.level as "Premium" | "Gold" | "Silver",
+    level: user.level,
     registeredAt: user.registeredAt.toLocaleDateString("es-AR", { year: "numeric", month: "short", day: "numeric" }),
     birthDate: user.birthDate ?? "",
   })
 }
 
 export async function PATCH(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const body = await request.json()
   const { name, lastName, email, phone, birthDate } = body
 
   const user = await prisma.user.update({
-    where: { id: DEFAULT_USER_ID },
+    where: { id: auth.userId },
     data: { name, lastName, email, phone, birthDate },
   })
 
@@ -40,7 +46,7 @@ export async function PATCH(request: NextRequest) {
     email: user.email,
     phone: user.phone,
     avatar: user.avatar,
-    level: user.level as "Premium" | "Gold" | "Silver",
+    level: user.level,
     registeredAt: user.registeredAt.toLocaleDateString("es-AR", { year: "numeric", month: "short", day: "numeric" }),
     birthDate: user.birthDate ?? "",
   })

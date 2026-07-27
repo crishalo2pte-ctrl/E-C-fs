@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, type ChangeEvent } from "react"
+import { useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Upload, X } from "lucide-react"
 
@@ -24,6 +24,7 @@ export interface ProductFormData {
   description: string
   price: number
   image: string
+  images?: string[]
   categoryId: string
   featured: boolean
   bestSeller: boolean
@@ -34,49 +35,102 @@ interface AdminProductFormProps {
   categories: CategoryOption[]
 }
 
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg"]
+
+interface ImageEntry {
+  url: string
+  file?: File
+}
+
 export function AdminProductForm({ product, categories }: AdminProductFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(product?.image ?? null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [images, setImages] = useState<ImageEntry[]>(() => {
+    const existing = product?.images?.length
+      ? product.images
+      : product?.image
+        ? [product.image]
+        : []
+    return existing.map((url) => ({ url }))
+  })
   const [submitting, setSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState("")
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
-      alert("Solo se permiten archivos PNG, JPG y JPEG")
-      return
+  const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    const valid: ImageEntry[] = []
+    for (const file of Array.from(files)) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        alert(`"${file.name}" no es PNG, JPG o JPEG — se omitió`)
+        continue
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`"${file.name}" supera 5MB — se omitió`)
+        continue
+      }
+      valid.push({ url: URL.createObjectURL(file), file })
     }
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
-  }
 
-  const removeImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
+    setImages((prev) => [...prev, ...valid])
     if (fileInputRef.current) fileInputRef.current.value = ""
-  }
+  }, [])
+
+  const removeImage = useCallback((index: number) => {
+    setImages((prev) => {
+      const next = [...prev]
+      const removed = next.splice(index, 1)[0]
+      if (removed.file) URL.revokeObjectURL(removed.url)
+      return next
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const form = new FormData(e.currentTarget)
     setSubmitting(true)
 
-    const form = new FormData(e.currentTarget)
-    const body: Record<string, unknown> = {
-      name: form.get("name"),
-      slug: form.get("slug"),
-      description: form.get("description"),
-      price: Number(form.get("price")),
-      categoryId: form.get("categoryId"),
-      featured: form.get("featured") === "on",
-      bestSeller: form.get("bestSeller") === "on",
-    }
-    if (imagePreview && !imageFile) {
-      body.image = imagePreview
-    }
-
     try {
+      const allUrls: string[] = []
+
+      const newFiles = images.filter((img) => img.file)
+      if (newFiles.length > 0) {
+        setUploading(true)
+        for (let i = 0; i < newFiles.length; i++) {
+          setUploadProgress(`Subiendo imagen ${i + 1} de ${newFiles.length}...`)
+          const fd = new FormData()
+          fd.append("file", newFiles[i].file!)
+
+          const res = await fetch("/api/admin/upload", { method: "POST", body: fd })
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: "Error al subir imagen" }))
+            throw new Error(err.message ?? "Error al subir imagen")
+          }
+          const { url } = await res.json()
+          allUrls.push(url)
+        }
+        setUploading(false)
+        setUploadProgress("")
+      }
+
+      const existingUrls = images.filter((img) => !img.file).map((img) => img.url)
+      const finalImages = [...existingUrls, ...allUrls]
+      const primaryImage = finalImages[0] ?? ""
+
+      const body: Record<string, unknown> = {
+        name: form.get("name"),
+        slug: form.get("slug"),
+        description: form.get("description"),
+        price: Number(form.get("price")),
+        categoryId: form.get("categoryId"),
+        featured: form.get("featured") === "on",
+        bestSeller: form.get("bestSeller") === "on",
+        image: primaryImage,
+        images: finalImages,
+      }
+
       const url = product?.id
         ? `/api/admin/products/${product.id}`
         : "/api/admin/products"
@@ -99,6 +153,8 @@ export function AdminProductForm({ product, categories }: AdminProductFormProps)
       alert(err instanceof Error ? err.message : "Error al guardar el producto")
     } finally {
       setSubmitting(false)
+      setUploading(false)
+      setUploadProgress("")
     }
   }
 
@@ -180,34 +236,45 @@ export function AdminProductForm({ product, categories }: AdminProductFormProps)
 
         <div className="space-y-6">
           <div className="rounded-xl border bg-white p-6 space-y-4">
-            <h2 className="text-lg font-semibold">Imagen del Producto</h2>
+            <h2 className="text-lg font-semibold">Imágenes del Producto</h2>
+
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {images.map((img, i) => (
+                  <div key={img.url} className="relative group">
+                    <img
+                      src={img.url}
+                      alt={`Imagen ${i + 1}`}
+                      className="aspect-square w-full rounded-lg object-cover border"
+                    />
+                    {i === 0 && (
+                      <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        Principal
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute top-1 right-1 rounded-full bg-destructive p-1 text-white shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition hover:border-primary/50 hover:bg-primary/5"
+              className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-6 text-center transition hover:border-primary/50 hover:bg-primary/5"
             >
-              {imagePreview ? (
-                <div className="relative">
-                  <img
-                    src={imagePreview}
-                    alt="Vista previa"
-                    className="max-h-48 rounded-lg object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); removeImage() }}
-                    className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white shadow"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
-                  <p className="text-sm font-medium">Haz clic para subir imagen</p>
-                  <p className="mt-1 text-xs text-muted-foreground">PNG, JPG o JPEG hasta 5MB</p>
-                </>
-              )}
+              <Upload className="mb-2 h-6 w-6 text-muted-foreground" />
+              <p className="text-sm font-medium">
+                {images.length > 0 ? "Agregar más imágenes" : "Haz clic para subir imágenes"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                PNG, JPG o JPEG — hasta 5MB c/u — Múltiples archivos permitidos
+              </p>
             </div>
 
             <input
@@ -215,20 +282,21 @@ export function AdminProductForm({ product, categories }: AdminProductFormProps)
               type="file"
               name="image"
               accept=".png,.jpg,.jpeg"
+              multiple
               className="hidden"
               onChange={handleImageChange}
             />
-
-            {imageFile && (
-              <p className="text-xs text-muted-foreground truncate">
-                {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
-              </p>
-            )}
           </div>
 
           <div className="flex gap-3">
             <Button type="submit" disabled={submitting} className="flex-1 rounded-full">
-              {submitting ? "Guardando..." : product ? "Guardar Cambios" : "Crear Producto"}
+              {uploading
+                ? uploadProgress
+                : submitting
+                  ? "Guardando..."
+                  : product
+                    ? "Guardar Cambios"
+                    : "Crear Producto"}
             </Button>
             <Button
               type="button"

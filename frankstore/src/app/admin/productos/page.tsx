@@ -99,8 +99,12 @@ export default function AdminProductos() {
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
-                        {product.name.charAt(0)}
+                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                        {product.image ? (
+                          <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-sm font-bold text-primary">{product.name.charAt(0)}</span>
+                        )}
                       </div>
                       <div>
                         <p className="font-medium">{product.name}</p>

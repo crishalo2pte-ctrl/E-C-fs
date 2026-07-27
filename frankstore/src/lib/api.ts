@@ -11,5 +11,3 @@ export async function fetcher<T>(url: string, options?: RequestInit): Promise<T>
   }
   return res.json()
 }
-
-export const DEFAULT_USER_ID = "usr_001"
