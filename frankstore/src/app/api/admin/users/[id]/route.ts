@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/admin-middleware"
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
 
   const user = await prisma.user.findUnique({ where: { id } })
@@ -29,6 +33,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
   const body = await request.json()
   const { name, lastName, email, phone, role, level } = body
@@ -36,6 +43,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const user = await prisma.user.findUnique({ where: { id } })
   if (!user) {
     return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 })
+  }
+
+  const validRoles = ["user", "admin"]
+  if (role !== undefined && !validRoles.includes(role)) {
+    return NextResponse.json({ message: "Rol inválido" }, { status: 400 })
   }
 
   const updated = await prisma.user.update({
@@ -59,7 +71,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   })
 }
 
-export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
 
   const user = await prisma.user.findUnique({ where: { id } })

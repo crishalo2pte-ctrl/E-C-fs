@@ -1,10 +1,12 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../src/generated/prisma/client.js"
+import bcrypt from "bcrypt"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
+  await prisma.refreshToken.deleteMany()
   await prisma.payment.deleteMany()
   await prisma.favorite.deleteMany()
   await prisma.orderItem.deleteMany()
@@ -14,6 +16,9 @@ async function main() {
   await prisma.product.deleteMany()
   await prisma.category.deleteMany()
   await prisma.user.deleteMany()
+
+  const userPassword = await bcrypt.hash("Usuario123!", 12)
+  const adminPassword = await bcrypt.hash("Admin123!", 12)
 
   const user = await prisma.user.create({
     data: {
@@ -29,6 +34,7 @@ async function main() {
       status: "activo",
       language: "es",
       currency: "ARS",
+      passwordHash: userPassword,
       notifEmail: true,
       notifSms: false,
       notifPromotions: true,
@@ -50,6 +56,7 @@ async function main() {
       status: "activo",
       language: "es",
       currency: "ARS",
+      passwordHash: adminPassword,
     },
   })
   console.log("Admin created")
@@ -108,12 +115,12 @@ async function main() {
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]))
 
   const ordersData = [
-    { id: "o1", number: "FS-2026-001", status: "entregado", total: 249.8, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-15", items: [{ productId: "1", name: "Camisa Oversize Premium", price: 89.9, quantity: 1 }, { productId: "2", name: "Pantalón Relax Fit", price: 109.9, quantity: 1 }] },
-    { id: "o2", number: "FS-2026-002", status: "enviado", total: 159.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-07-10", items: [{ productId: "8", name: "Chaqueta Tejida Artesanal", price: 159.9, quantity: 1 }] },
-    { id: "o3", number: "FS-2026-003", status: "procesando", total: 189.7, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-05", items: [{ productId: "11", name: "Bolso de Cuero Natural", price: 129.9, quantity: 1 }, { productId: "18", name: "Gorra Tejida Frank", price: 39.9, quantity: 1 }] },
-    { id: "o4", number: "FS-2026-004", status: "entregado", total: 119.9, paymentMethod: "Rapipago", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-28", items: [{ productId: "15", name: "Saco Cardigan Premium", price: 119.9, quantity: 1 }] },
-    { id: "o5", number: "FS-2026-005", status: "cancelado", total: 99.9, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-06-20", items: [{ productId: "12", name: "Vestido Midi Flora", price: 99.9, quantity: 1 }] },
-    { id: "o6", number: "FS-2026-006", status: "entregado", total: 59.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-15", items: [{ productId: "10", name: "Bufanda de Lana", price: 59.9, quantity: 1 }] },
+    { id: "o1", number: "FS-2026-001", status: "entregada" as const, total: 249.8, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-15", items: [{ productId: "1", name: "Camisa Oversize Premium", price: 89.9, quantity: 1 }, { productId: "2", name: "Pantalón Relax Fit", price: 109.9, quantity: 1 }] },
+    { id: "o2", number: "FS-2026-002", status: "enviada" as const, total: 159.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-07-10", items: [{ productId: "8", name: "Chaqueta Tejida Artesanal", price: 159.9, quantity: 1 }] },
+    { id: "o3", number: "FS-2026-003", status: "confirmada" as const, total: 189.7, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-05", items: [{ productId: "11", name: "Bolso de Cuero Natural", price: 129.9, quantity: 1 }, { productId: "18", name: "Gorra Tejida Frank", price: 39.9, quantity: 1 }] },
+    { id: "o4", number: "FS-2026-004", status: "entregada" as const, total: 119.9, paymentMethod: "Rapipago", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-28", items: [{ productId: "15", name: "Saco Cardigan Premium", price: 119.9, quantity: 1 }] },
+    { id: "o5", number: "FS-2026-005", status: "cancelada" as const, total: 99.9, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-06-20", items: [{ productId: "12", name: "Vestido Midi Flora", price: 99.9, quantity: 1 }] },
+    { id: "o6", number: "FS-2026-006", status: "entregada" as const, total: 59.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-15", items: [{ productId: "10", name: "Bufanda de Lana", price: 59.9, quantity: 1 }] },
   ]
 
   for (const o of ordersData) {
@@ -141,12 +148,14 @@ async function main() {
   console.log("6 favorites created")
 
   await Promise.all([
-    prisma.payment.create({ data: { transactionId: "txn_001", userId: user.id, amount: 249.8, method: "Tarjeta", status: "completado", product: "Camisa Oversize Premium", date: new Date("2026-07-15") } }),
-    prisma.payment.create({ data: { transactionId: "txn_002", userId: user.id, amount: 159.9, method: "Mercado Pago", status: "completado", product: "Chaqueta Tejida Artesanal", date: new Date("2026-07-10") } }),
+    prisma.payment.create({ data: { transactionId: "txn_001", userId: user.id, amount: 249.8, currency: "ARS", method: "Tarjeta", status: "completado", product: "Camisa Oversize Premium", date: new Date("2026-07-15") } }),
+    prisma.payment.create({ data: { transactionId: "txn_002", userId: user.id, amount: 159.9, currency: "ARS", method: "Mercado Pago", status: "completado", product: "Chaqueta Tejida Artesanal", date: new Date("2026-07-10") } }),
   ])
   console.log("2 payments created")
 
   console.log("\nSeed completed successfully!")
+  console.log("User credentials: diego@frankstore.com.ar / Usuario123!")
+  console.log("Admin credentials: admin@frankstore.com.ar / Admin123!")
 }
 
 main()

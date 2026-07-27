@@ -59,7 +59,7 @@ export default async function Home() {
 
   return (
     <>
-      <ProductCarousel products={allProducts.slice(0, 5)} />
+      <ProductCarousel />
 
       <section className="py-16">
         <Container>

@@ -1,80 +1,95 @@
 ﻿import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
+import { prisma } from './prisma'
 
-interface DecodedToken {
+interface TokenPayload {
   userId: string
   email: string
   role: string
+}
+
+interface DecodedToken extends TokenPayload {
+  iat: number
   exp: number
 }
 
-interface User {
-  id: string
-  name: string
-  lastName: string
-  email: string
-  role: string
-  passwordHash: string
-  level: string
-  avatar: string
-  status: string
-  language: string
-  currency: string
-  notifEmail: boolean
-  notifSms: boolean
-  notifPromotions: boolean
-  notifOrderUpdates: boolean
-  notifNewsletter: boolean
-  registeredAt: Date
-  lastLoginAt?: Date
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) throw new Error('JWT_SECRET no está definido en las variables de entorno')
+  return secret
+}
+
+function getJwtRefreshSecret(): string {
+  const secret = process.env.JWT_REFRESH_SECRET
+  if (!secret) throw new Error('JWT_REFRESH_SECRET no está definido en las variables de entorno')
+  return secret
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 12
-  return await bcrypt.hash(password, saltRounds)
+  return await bcrypt.hash(password, 12)
 }
 
 export async function comparePassword(password: string, hash: string): Promise<boolean> {
   return await bcrypt.compare(password, hash)
 }
 
-export function generateToken(user: { id: string; email: string; role: string }): string {
-  const secret = process.env.JWT_SECRET || 'frankstore-secret-key-2024'
-  
+export function generateAccessToken(user: TokenPayload): string {
   return jwt.sign(
-    {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    },
-    secret,
-    { expiresIn: '8h' }
+    { userId: user.userId, email: user.email, role: user.role },
+    getJwtSecret(),
+    { expiresIn: '1h' }
   )
 }
 
-export function verifyToken(token: string): DecodedToken | null {
+export function generateRefreshToken(): string {
+  return crypto.randomBytes(40).toString('hex')
+}
+
+export function verifyAccessToken(token: string): DecodedToken | null {
   try {
-    const secret = process.env.JWT_SECRET || 'frankstore-secret-key-2024'
-    return jwt.verify(token, secret) as DecodedToken
-  } catch (error) {
+    return jwt.verify(token, getJwtSecret()) as DecodedToken
+  } catch {
     return null
   }
 }
 
-export function getTokenFromRequest(request: any): string | null {
-  if (request.headers && request.headers.cookie) {
-    const cookies = request.headers.cookie
-    const tokenMatch = cookies.match(/auth_token=([^;]+)/)
-    if (tokenMatch) {
-      return tokenMatch[1]
-    }
+export function verifyRefreshToken(token: string): { userId: string } | null {
+  try {
+    const decoded = jwt.verify(token, getJwtRefreshSecret()) as { userId: string }
+    return decoded
+  } catch {
+    return null
   }
-  
-  return null
 }
 
-export function createAuthHeaders(token: string): Headers {
-  const headers = new Headers()
-  headers.set('Authorization', `Bearer ${token}`)
-  return headers
+export async function createRefreshToken(userId: string): Promise<string> {
+  const token = generateRefreshToken()
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + 30)
+
+  await prisma.refreshToken.create({
+    data: { token, userId, expiresAt },
+  })
+
+  return token
+}
+
+export async function revokeRefreshToken(token: string): Promise<void> {
+  await prisma.refreshToken.deleteMany({ where: { token } })
+}
+
+export function getTokenFromRequest(request: Request): string | null {
+  const cookieHeader = request.headers.get('cookie')
+  if (cookieHeader) {
+    const match = cookieHeader.match(/auth_token=([^;]+)/)
+    if (match) return match[1]
+  }
+
+  const authHeader = request.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.slice(7)
+  }
+
+  return null
 }

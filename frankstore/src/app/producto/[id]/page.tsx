@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ProductCard } from "@/components/product-card"
+import { ProductGallery } from "@/components/product-gallery"
 import { AddToCartActions } from "@/components/add-to-cart-button"
 import { prisma } from "@/lib/prisma"
 import { formatARS } from "@/lib/format"
@@ -128,9 +129,10 @@ export default async function ProductoPage(props: {
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="aspect-[4/5] overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-          <span className="text-9xl font-bold text-primary/20">{product.name.charAt(0)}</span>
-        </div>
+        <ProductGallery
+          images={product.images?.length ? product.images : product.image ? [product.image] : []}
+          name={product.name}
+        />
 
         <div className="flex flex-col justify-center">
           <Badge className="mb-3 w-fit rounded-full" variant="secondary">

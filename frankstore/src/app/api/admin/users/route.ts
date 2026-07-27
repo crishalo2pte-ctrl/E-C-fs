@@ -1,7 +1,11 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/admin-middleware"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
   })

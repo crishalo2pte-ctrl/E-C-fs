@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { DEFAULT_USER_ID } from "@/lib/api"
+import { requireAuth } from "@/lib/auth-middleware"
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
   const body = await request.json()
   const { name, street, city, department, postalCode, phone, isDefault } = body
 
+  const existing = await prisma.address.findUnique({ where: { id } })
+  if (!existing || existing.userId !== auth.userId) {
+    return NextResponse.json({ error: "Dirección no encontrada" }, { status: 404 })
+  }
+
   if (isDefault) {
     await prisma.address.updateMany({
-      where: { userId: DEFAULT_USER_ID },
+      where: { userId: auth.userId },
       data: { isDefault: false },
     })
   }
@@ -31,11 +39,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   })
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
   const address = await prisma.address.findUnique({ where: { id } })
 
-  if (!address || address.userId !== DEFAULT_USER_ID) {
+  if (!address || address.userId !== auth.userId) {
     return NextResponse.json({ error: "Dirección no encontrada" }, { status: 404 })
   }
 
@@ -44,7 +55,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   if (wasDefault) {
     const nextAddress = await prisma.address.findFirst({
-      where: { userId: DEFAULT_USER_ID },
+      where: { userId: auth.userId },
       orderBy: { createdAt: "asc" },
     })
     if (nextAddress) {

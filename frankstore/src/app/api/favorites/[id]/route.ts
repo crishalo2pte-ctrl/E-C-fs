@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { DEFAULT_USER_ID } from "@/lib/api"
+import { requireAuth } from "@/lib/auth-middleware"
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
 
   const favorite = await prisma.favorite.findUnique({ where: { id } })
 
-  if (!favorite || favorite.userId !== DEFAULT_USER_ID) {
+  if (!favorite || favorite.userId !== auth.userId) {
     return NextResponse.json({ error: "Favorito no encontrado" }, { status: 404 })
   }
 

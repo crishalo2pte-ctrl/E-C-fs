@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { DEFAULT_USER_ID } from "@/lib/api"
+import { requireAuth } from "@/lib/auth-middleware"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const favorites = await prisma.favorite.findMany({
-    where: { userId: DEFAULT_USER_ID },
+    where: { userId: auth.userId },
     include: { product: { include: { category: true } } },
     orderBy: { createdAt: "desc" },
   })
@@ -23,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const body = await request.json()
   const { productId } = body
 
@@ -31,7 +37,7 @@ export async function POST(request: NextRequest) {
   }
 
   const existing = await prisma.favorite.findUnique({
-    where: { userId_productId: { userId: DEFAULT_USER_ID, productId } },
+    where: { userId_productId: { userId: auth.userId, productId } },
   })
 
   if (existing) {
@@ -39,7 +45,7 @@ export async function POST(request: NextRequest) {
   }
 
   const favorite = await prisma.favorite.create({
-    data: { userId: DEFAULT_USER_ID, productId },
+    data: { userId: auth.userId, productId },
   })
 
   return NextResponse.json(favorite)

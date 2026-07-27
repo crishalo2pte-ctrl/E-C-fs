@@ -1,44 +1,38 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, comparePassword, generateToken, verifyToken } from '@/lib/auth'
+import { hashPassword, comparePassword, generateAccessToken, createRefreshToken, verifyAccessToken, revokeRefreshToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name, role = 'user' } = body
+    const { email, password, name } = body
 
     if (!email || !password) {
-      return NextResponse.json(
-        { message: 'Email and password are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ message: 'Email y contraseña son requeridos' }, { status: 400 })
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
+    const existingUser = await prisma.user.findUnique({ where: { email } })
 
     if (existingUser) {
       if (!existingUser.passwordHash) {
-        return NextResponse.json(
-          { message: 'Invalid credentials' },
-          { status: 401 }
-        )
-      }
-      const isValidPassword = await comparePassword(password, existingUser.passwordHash)
-      
-      if (!isValidPassword) {
-        return NextResponse.json(
-          { message: 'Invalid credentials' },
-          { status: 401 }
-        )
+        return NextResponse.json({ message: 'Credenciales inválidas' }, { status: 401 })
       }
 
-      const token = generateToken(existingUser)
-      
-      return NextResponse.json({
+      const isValidPassword = await comparePassword(password, existingUser.passwordHash)
+      if (!isValidPassword) {
+        return NextResponse.json({ message: 'Credenciales inválidas' }, { status: 401 })
+      }
+
+      const accessToken = generateAccessToken({
+        userId: existingUser.id,
+        email: existingUser.email,
+        role: existingUser.role,
+      })
+      const refreshToken = await createRefreshToken(existingUser.id)
+
+      const response = NextResponse.json({
         success: true,
-        token,
+        token: accessToken,
         user: {
           id: existingUser.id,
           name: existingUser.name,
@@ -46,29 +40,40 @@ export async function POST(request: NextRequest) {
           email: existingUser.email,
           role: existingUser.role,
           level: existingUser.level,
-          avatar: existingUser.avatar
-        }
+          avatar: existingUser.avatar,
+        },
       })
+
+      response.cookies.set('auth_token', accessToken, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60,
+      })
+      response.cookies.set('refresh_token', refreshToken, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30,
+      })
+
+      return response
+    }
+
+    if (!name) {
+      return NextResponse.json({ message: 'El nombre es requerido para registrarse' }, { status: 400 })
     }
 
     const passwordHash = await hashPassword(password)
-    
-    const validRoles = ['user', 'admin']
-    if (!validRoles.includes(role)) {
-      return NextResponse.json(
-        { message: 'Invalid role' },
-        { status: 400 }
-      )
-    }
 
     const newUser = await prisma.user.create({
       data: {
-        name: name || '',
+        name,
         lastName: '',
         email,
         phone: '',
         passwordHash,
-        role,
+        role: 'user',
         status: 'activo',
         language: 'es',
         currency: 'ARS',
@@ -78,15 +83,20 @@ export async function POST(request: NextRequest) {
         notifSms: false,
         notifPromotions: true,
         notifOrderUpdates: true,
-        notifNewsletter: false
-      }
+        notifNewsletter: false,
+      },
     })
 
-    const token = generateToken(newUser)
-    
-    return NextResponse.json({
+    const accessToken = generateAccessToken({
+      userId: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+    })
+    const refreshToken = await createRefreshToken(newUser.id)
+
+    const response = NextResponse.json({
       success: true,
-      token,
+      token: accessToken,
       user: {
         id: newUser.id,
         name: newUser.name,
@@ -94,16 +104,27 @@ export async function POST(request: NextRequest) {
         email: newUser.email,
         role: newUser.role,
         level: newUser.level,
-        avatar: newUser.avatar
-      }
+        avatar: newUser.avatar,
+      },
     })
 
+    response.cookies.set('auth_token', accessToken, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60,
+    })
+    response.cookies.set('refresh_token', refreshToken, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+    })
+
+    return response
   } catch (error) {
     console.error('Authentication error:', error)
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -114,74 +135,54 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ user: null }, { status: 401 })
   }
 
-  try {
-    const decoded = verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ user: null }, { status: 401 })
-    }
-    
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    })
-
-    if (!user) {
-      return NextResponse.json({ user: null }, { status: 404 })
-    }
-
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
-        level: user.level,
-        avatar: user.avatar
-      }
-    })
-  } catch (error) {
-    return NextResponse.json(
-      { user: null },
-      { status: 401 }
-    )
+  const decoded = verifyAccessToken(token)
+  if (!decoded) {
+    return NextResponse.json({ user: null }, { status: 401 })
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+  })
+
+  if (!user) {
+    return NextResponse.json({ user: null }, { status: 404 })
+  }
+
+  return NextResponse.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      level: user.level,
+      avatar: user.avatar,
+    },
+  })
 }
 
 export async function DELETE(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value
+  const refreshToken = request.cookies.get('refresh_token')?.value
 
   if (!token) {
-    return NextResponse.json(
-      { message: 'No token provided' },
-      { status: 400 }
-    )
+    return NextResponse.json({ message: 'No token provided' }, { status: 400 })
   }
 
-  try {
-    const decoded = verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json(
-        { message: 'Invalid token' },
-        { status: 401 }
-      )
-    }
-    
-    await prisma.user.delete({
-      where: { id: decoded.userId }
-    })
-
-    const response = NextResponse.json(
-      { message: 'User deleted successfully' },
-      { status: 200 }
-    )
-
-    response.cookies.delete('auth_token')
-    
-    return response
-  } catch (error) {
-    return NextResponse.json(
-      { message: 'Invalid token' },
-      { status: 401 }
-    )
+  const decoded = verifyAccessToken(token)
+  if (!decoded) {
+    return NextResponse.json({ message: 'Token inválido' }, { status: 401 })
   }
+
+  if (refreshToken) {
+    await revokeRefreshToken(refreshToken)
+  }
+
+  await prisma.refreshToken.deleteMany({ where: { userId: decoded.userId } })
+
+  const response = NextResponse.json({ message: 'Sesión cerrada' }, { status: 200 })
+  response.cookies.delete('auth_token')
+  response.cookies.delete('refresh_token')
+
+  return response
 }

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { DEFAULT_USER_ID } from "@/lib/api"
+import { requireAuth } from "@/lib/auth-middleware"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const addresses = await prisma.address.findMany({
-    where: { userId: DEFAULT_USER_ID },
+    where: { userId: auth.userId },
     orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
   })
 
@@ -23,18 +26,21 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   const body = await request.json()
   const { name, street, city, department, postalCode, phone, isDefault } = body
 
   if (isDefault) {
     await prisma.address.updateMany({
-      where: { userId: DEFAULT_USER_ID },
+      where: { userId: auth.userId },
       data: { isDefault: false },
     })
   }
 
   const address = await prisma.address.create({
-    data: { userId: DEFAULT_USER_ID, name, street, city, department, postalCode, phone, isDefault: isDefault ?? false },
+    data: { userId: auth.userId, name, street, city, department, postalCode, phone, isDefault: isDefault ?? false },
   })
 
   return NextResponse.json({
