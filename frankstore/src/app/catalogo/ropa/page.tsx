@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { ProductCard } from "@/components/product-card"
 import { SectionHeader } from "@/components/section-header"
-import { products } from "@/lib/products"
+import { prisma } from "@/lib/prisma"
 import { Container } from "@/components/container"
 
 export const metadata: Metadata = {
@@ -9,8 +9,28 @@ export const metadata: Metadata = {
   description: "Descubrí nuestra colección de ropa con estilo único. Prendas de calidad en Córdoba, Argentina.",
 }
 
-export default function RopaPage() {
-  const ropaProducts = products.filter((p) => p.categorySlug === "ropa")
+async function getRopaProducts() {
+  const products = await prisma.product.findMany({
+    where: { category: { slug: "ropa" } },
+    include: { category: true },
+    orderBy: { createdAt: "desc" },
+  })
+  return products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    price: p.price,
+    image: p.image,
+    category: p.category.name,
+    categorySlug: p.category.slug,
+    featured: p.featured,
+    bestSeller: p.bestSeller,
+  }))
+}
+
+export default async function RopaPage() {
+  const ropaProducts = await getRopaProducts()
 
   return (
     <Container py={12}>

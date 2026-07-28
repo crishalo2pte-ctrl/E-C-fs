@@ -1,33 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyAccessToken } from '@/lib/auth'
+import { NextRequest, NextResponse } from "next/server"
+import { jwtVerify } from "jose"
 
-export function middleware(request: NextRequest) {
+const ADMIN_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "")
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    const token = request.cookies.get('admin_token')?.value
-      ?? request.cookies.get('auth_token')?.value
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    const token = request.cookies.get("admin_token")?.value
 
     if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      return NextResponse.redirect(new URL("/admin/login", request.url))
     }
 
-    const decoded = verifyAccessToken(token)
-    if (!decoded || decoded.role !== 'admin') {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
-  }
-
-  if (pathname.startsWith('/profile')) {
-    const token = request.cookies.get('auth_token')?.value
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    const decoded = verifyAccessToken(token)
-    if (!decoded) {
-      return NextResponse.redirect(new URL('/login', request.url))
+    try {
+      const { payload } = await jwtVerify(token, ADMIN_SECRET)
+      if (payload.role !== "admin") {
+        return NextResponse.redirect(new URL("/admin/login", request.url))
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/admin/login", request.url))
     }
   }
 
@@ -35,5 +27,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/profile/:path*']
+  matcher: ["/admin/:path*"],
 }

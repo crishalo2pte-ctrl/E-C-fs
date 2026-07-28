@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 import { ProductCarousel } from "@/components/product-carousel"
 import { ProductCard } from "@/components/product-card"
 import { SectionHeader } from "@/components/section-header"

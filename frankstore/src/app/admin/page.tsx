@@ -1,5 +1,7 @@
 import { TrendingUp, Package, CreditCard, Users } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatARS } from "@/lib/format"
 import { prisma } from "@/lib/prisma"

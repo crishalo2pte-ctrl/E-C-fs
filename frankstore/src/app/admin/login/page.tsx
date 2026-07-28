@@ -44,7 +44,7 @@ export default function AdminLogin() {
       }
 
       const data = await res.json()
-      localStorage.setItem("admin_session", data.token)
+      localStorage.setItem("admin_session", btoa(JSON.stringify(data.user)))
       router.push("/admin")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión")
