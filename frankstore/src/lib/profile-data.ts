@@ -14,7 +14,7 @@ export interface Order {
   id: string
   number: string
   date: string
-  status: "pendiente" | "procesando" | "enviado" | "entregado" | "cancelado"
+  status: "pendiente" | "confirmada" | "enviada" | "entregada" | "cancelada"
   total: number
   paymentMethod: string
   items: { name: string; quantity: number; price: number }[]
@@ -59,74 +59,74 @@ export const ordersData: Order[] = [
     id: "o1",
     number: "FS-2026-001",
     date: "15 Jul 2026",
-    status: "entregado",
-    total: 249_800,
+    status: "entregada",
+    total: 199.8,
     paymentMethod: "Tarjeta •••• 4242",
     address: "Av. Colón 1234, Córdoba",
     items: [
-      { name: "Camisa Oversize Premium", quantity: 1, price: 89_900 },
-      { name: "Pantalón Relax Fit", quantity: 1, price: 109_900 },
+      { name: "Camisa Linen Classic", quantity: 1, price: 79.9 },
+      { name: "Jeans Slim Fit Premium", quantity: 1, price: 119.9 },
     ],
   },
   {
     id: "o2",
     number: "FS-2026-002",
     date: "10 Jul 2026",
-    status: "enviado",
-    total: 159_900,
+    status: "enviada",
+    total: 149.9,
     paymentMethod: "Mercado Pago •••• 7890",
     address: "San Martín 567, Buenos Aires",
     items: [
-      { name: "Chaqueta Tejida Artesanal", quantity: 1, price: 159_900 },
+      { name: "Chaqueta Denim Clásica", quantity: 1, price: 149.9 },
     ],
   },
   {
     id: "o3",
     number: "FS-2026-003",
     date: "5 Jul 2026",
-    status: "procesando",
-    total: 189_700,
+    status: "confirmada",
+    total: 349.8,
     paymentMethod: "Tarjeta •••• 4242",
     address: "Av. Colón 1234, Córdoba",
     items: [
-      { name: "Bolso de Cuero Natural", quantity: 1, price: 129_900 },
-      { name: "Gorra Tejida Frank", quantity: 1, price: 39_900 },
+      { name: "Traje Elegante Premium", quantity: 1, price: 299.9 },
+      { name: "Gorra Snapback Frank", quantity: 1, price: 49.9 },
     ],
   },
   {
     id: "o4",
     number: "FS-2026-004",
     date: "28 Jun 2026",
-    status: "entregado",
-    total: 119_900,
+    status: "entregada",
+    total: 249.9,
     paymentMethod: "Rapipago",
     address: "San Martín 567, Buenos Aires",
     items: [
-      { name: "Saco Cardigan Premium", quantity: 1, price: 119_900 },
+      { name: "Abrigo Invierno Designer", quantity: 1, price: 249.9 },
     ],
   },
   {
     id: "o5",
     number: "FS-2026-005",
     date: "20 Jun 2026",
-    status: "cancelado",
-    total: 99_900,
+    status: "cancelada",
+    total: 179.9,
     paymentMethod: "Tarjeta •••• 4242",
     address: "Av. Colón 1234, Córdoba",
     items: [
-      { name: "Vestido Midi Flora", quantity: 1, price: 99_900 },
+      { name: "Vestido Floral Exclusivo", quantity: 1, price: 179.9 },
     ],
   },
   {
     id: "o6",
     number: "FS-2026-006",
     date: "15 Jun 2026",
-    status: "entregado",
-    total: 59_900,
+    status: "entregada",
+    total: 89.9,
     paymentMethod: "Mercado Pago •••• 7890",
     address: "San Martín 567, Buenos Aires",
     items: [
-      { name: "Bufanda de Lana", quantity: 1, price: 59_900 },
+      { name: "Suéter Gris Comfort", quantity: 1, price: 89.9 },
     ],
   },
 ]
@@ -165,10 +165,10 @@ export const addressesData: Address[] = [
 ]
 
 export const favoritesData: Favorite[] = [
-  { id: "f1", name: "Camisa Oversize Premium", price: 89_900, image: "/images/product-1.jpg", inStock: true, slug: "camisa-oversize-premium", category: "Ropa" },
-  { id: "f2", name: "Chaqueta Tejida Artesanal", price: 159_900, image: "/images/product-2.jpg", inStock: true, slug: "chaqueta-tejida-artesanal", category: "Ropa" },
-  { id: "f3", name: "Bolso de Cuero Natural", price: 129_900, image: "/images/product-3.jpg", inStock: true, slug: "bolso-cuero-natural", category: "Imperdibles" },
-  { id: "f4", name: "Gorra Tejida Frank", price: 39_900, image: "/images/product-7.jpg", inStock: false, slug: "gorra-tejida-frank", category: "Más Vendidos" },
-  { id: "f5", name: "Pantalón Relax Fit", price: 109_900, image: "/images/product-4.jpg", inStock: true, slug: "pantalon-relax-fit", category: "Ropa" },
-  { id: "f6", name: "Saco Cardigan Premium", price: 119_900, image: "/images/product-6.jpg", inStock: true, slug: "saco-cardigan-premium", category: "Colección Destacada" },
+  { id: "f1", name: "Camisa Linen Classic", price: 79.9, image: "/images/product-1.jpg", inStock: true, slug: "camisa-linen-classic", category: "Ropa" },
+  { id: "f2", name: "Chaqueta Denim Clásica", price: 149.9, image: "/images/product-8.jpg", inStock: true, slug: "chaqueta-denim-clasica", category: "Imperdibles" },
+  { id: "f3", name: "Traje Elegante Premium", price: 299.9, image: "/images/product-11.jpg", inStock: true, slug: "traje-elegante-premium", category: "Colección Destacada" },
+  { id: "f4", name: "Gorra Snapback Frank", price: 49.9, image: "/images/product-18.jpg", inStock: true, slug: "gorra-snapback-frank", category: "Más Vendidos" },
+  { id: "f5", name: "Jeans Slim Fit Premium", price: 119.9, image: "/images/product-2.jpg", inStock: true, slug: "jeans-slim-fit-premium", category: "Ropa" },
+  { id: "f6", name: "Abrigo Invierno Designer", price: 249.9, image: "/images/product-15.jpg", inStock: true, slug: "abrigo-invierno-designer", category: "Colección Destacada" },
 ]

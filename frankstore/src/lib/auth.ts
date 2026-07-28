@@ -1,6 +1,5 @@
 ﻿import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
 import { prisma } from './prisma'
 
 interface TokenPayload {
@@ -42,8 +41,8 @@ export function generateAccessToken(user: TokenPayload): string {
   )
 }
 
-export function generateRefreshToken(): string {
-  return crypto.randomBytes(40).toString('hex')
+export function generateRefreshToken(userId: string): string {
+  return jwt.sign({ userId }, getJwtRefreshSecret(), { expiresIn: '30d' })
 }
 
 export function verifyAccessToken(token: string): DecodedToken | null {
@@ -64,7 +63,7 @@ export function verifyRefreshToken(token: string): { userId: string } | null {
 }
 
 export async function createRefreshToken(userId: string): Promise<string> {
-  const token = generateRefreshToken()
+  const token = generateRefreshToken(userId)
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 30)
 
@@ -82,7 +81,7 @@ export async function revokeRefreshToken(token: string): Promise<void> {
 export function getTokenFromRequest(request: Request): string | null {
   const cookieHeader = request.headers.get('cookie')
   if (cookieHeader) {
-    const match = cookieHeader.match(/auth_token=([^;]+)/)
+    const match = cookieHeader.match(/(?:auth_token|admin_token)=([^;]+)/)
     if (match) return match[1]
   }
 

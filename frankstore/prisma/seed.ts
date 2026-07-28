@@ -115,12 +115,12 @@ async function main() {
   const productMap = Object.fromEntries(products.map((p) => [p.id, p]))
 
   const ordersData = [
-    { id: "o1", number: "FS-2026-001", status: "entregada" as const, total: 249.8, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-15", items: [{ productId: "1", name: "Camisa Oversize Premium", price: 89.9, quantity: 1 }, { productId: "2", name: "Pantalón Relax Fit", price: 109.9, quantity: 1 }] },
-    { id: "o2", number: "FS-2026-002", status: "enviada" as const, total: 159.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-07-10", items: [{ productId: "8", name: "Chaqueta Tejida Artesanal", price: 159.9, quantity: 1 }] },
-    { id: "o3", number: "FS-2026-003", status: "confirmada" as const, total: 189.7, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-05", items: [{ productId: "11", name: "Bolso de Cuero Natural", price: 129.9, quantity: 1 }, { productId: "18", name: "Gorra Tejida Frank", price: 39.9, quantity: 1 }] },
-    { id: "o4", number: "FS-2026-004", status: "entregada" as const, total: 119.9, paymentMethod: "Rapipago", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-28", items: [{ productId: "15", name: "Saco Cardigan Premium", price: 119.9, quantity: 1 }] },
-    { id: "o5", number: "FS-2026-005", status: "cancelada" as const, total: 99.9, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-06-20", items: [{ productId: "12", name: "Vestido Midi Flora", price: 99.9, quantity: 1 }] },
-    { id: "o6", number: "FS-2026-006", status: "entregada" as const, total: 59.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-15", items: [{ productId: "10", name: "Bufanda de Lana", price: 59.9, quantity: 1 }] },
+    { id: "o1", number: "FS-2026-001", status: "entregada" as const, total: 199.8, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-15", items: [{ productId: "1", name: "Camisa Linen Classic", price: 79.9, quantity: 1 }, { productId: "2", name: "Jeans Slim Fit Premium", price: 119.9, quantity: 1 }] },
+    { id: "o2", number: "FS-2026-002", status: "enviada" as const, total: 149.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-07-10", items: [{ productId: "8", name: "Chaqueta Denim Clásica", price: 149.9, quantity: 1 }] },
+    { id: "o3", number: "FS-2026-003", status: "confirmada" as const, total: 349.8, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-07-05", items: [{ productId: "11", name: "Traje Elegante Premium", price: 299.9, quantity: 1 }, { productId: "18", name: "Gorra Snapback Frank", price: 49.9, quantity: 1 }] },
+    { id: "o4", number: "FS-2026-004", status: "entregada" as const, total: 249.9, paymentMethod: "Rapipago", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-28", items: [{ productId: "15", name: "Abrigo Invierno Designer", price: 249.9, quantity: 1 }] },
+    { id: "o5", number: "FS-2026-005", status: "cancelada" as const, total: 179.9, paymentMethod: "Tarjeta •••• 4242", addressSnapshot: "Av. Colón 1234, Córdoba", date: "2026-06-20", items: [{ productId: "12", name: "Vestido Floral Exclusivo", price: 179.9, quantity: 1 }] },
+    { id: "o6", number: "FS-2026-006", status: "entregada" as const, total: 89.9, paymentMethod: "Mercado Pago •••• 7890", addressSnapshot: "San Martín 567, Buenos Aires", date: "2026-06-15", items: [{ productId: "10", name: "Suéter Gris Comfort", price: 89.9, quantity: 1 }] },
   ]
 
   for (const o of ordersData) {
@@ -148,8 +148,8 @@ async function main() {
   console.log("6 favorites created")
 
   await Promise.all([
-    prisma.payment.create({ data: { transactionId: "txn_001", userId: user.id, amount: 249.8, currency: "ARS", method: "Tarjeta", status: "completado", product: "Camisa Oversize Premium", date: new Date("2026-07-15") } }),
-    prisma.payment.create({ data: { transactionId: "txn_002", userId: user.id, amount: 159.9, currency: "ARS", method: "Mercado Pago", status: "completado", product: "Chaqueta Tejida Artesanal", date: new Date("2026-07-10") } }),
+    prisma.payment.create({ data: { transactionId: "txn_001", userId: user.id, amount: 199.8, currency: "ARS", method: "Tarjeta", status: "completado", product: "Camisa Linen Classic + Jeans Slim Fit Premium", date: new Date("2026-07-15") } }),
+    prisma.payment.create({ data: { transactionId: "txn_002", userId: user.id, amount: 149.9, currency: "ARS", method: "Mercado Pago", status: "completado", product: "Chaqueta Denim Clásica", date: new Date("2026-07-10") } }),
   ])
   console.log("2 payments created")
 

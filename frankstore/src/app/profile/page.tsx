@@ -32,7 +32,7 @@ export default function ProfilePage() {
   })
 
   const totalSpent = orders
-    .filter((o) => o.status !== "cancelado")
+    .filter((o) => o.status !== "cancelada")
     .reduce((s, o) => s + o.total, 0)
 
   const handleInputChange = (field: keyof typeof form, value: string) => {
