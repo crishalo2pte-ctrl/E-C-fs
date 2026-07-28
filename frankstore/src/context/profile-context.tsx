@@ -12,8 +12,8 @@ const DEFAULT_PROFILE: UserProfile = {
   id: "usr_001",
   name: "Diego",
   lastName: "Ramírez",
-  email: "diego@frankstore.co",
-  phone: "+57 321 456 7890",
+  email: "diego@frankstore.com.ar",
+  phone: "+54 351 456 7890",
   avatar: "",
   level: "Premium",
   registeredAt: "1 Ene 2026",
@@ -31,7 +31,7 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
 
-function loadProfile(): UserProfile {
+function loadProfileFromStorage(): UserProfile {
   if (typeof window === "undefined") return DEFAULT_PROFILE
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -41,14 +41,44 @@ function loadProfile(): UserProfile {
   }
 }
 
+async function fetchProfileFromAPI(): Promise<UserProfile | null> {
+  try {
+    const res = await fetch("/api/profile")
+    if (!res.ok) return null
+    const data = await res.json()
+    return {
+      id: data.id,
+      name: data.name,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone ?? "",
+      avatar: data.avatar ?? "",
+      level: data.level ?? "Silver",
+      registeredAt: data.registeredAt ?? "",
+      birthDate: data.birthDate ?? "",
+    }
+  } catch {
+    return null
+  }
+}
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE)
   const [isEditing, setIsEditing] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    setProfile(loadProfile())
-    setIsLoaded(true)
+    async function load() {
+      const apiProfile = await fetchProfileFromAPI()
+      if (apiProfile) {
+        setProfile(apiProfile)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(apiProfile))
+      } else {
+        setProfile(loadProfileFromStorage())
+      }
+      setIsLoaded(true)
+    }
+    load()
   }, [])
 
   useEffect(() => {
@@ -61,9 +91,27 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setProfile((prev) => ({ ...prev, ...data }))
   }, [])
 
-  const saveProfile = useCallback(() => {
+  const saveProfile = useCallback(async () => {
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.name,
+          lastName: profile.lastName,
+          phone: profile.phone,
+          birthDate: profile.birthDate,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setProfile((prev) => ({ ...prev, ...data }))
+      }
+    } catch {
+      // Keep local changes if API fails
+    }
     setIsEditing(false)
-  }, [])
+  }, [profile])
 
   return (
     <ProfileContext.Provider

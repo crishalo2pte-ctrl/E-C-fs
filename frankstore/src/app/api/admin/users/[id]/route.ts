@@ -8,14 +8,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params
 
-  const user = await prisma.user.findUnique({ where: { id } })
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: {
+      _count: { select: { orders: true } },
+      payments: { select: { amount: true } },
+    },
+  })
   if (!user) {
     return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 })
   }
-
-  const ordersCount = await prisma.order.count({ where: { userId: user.id } })
-  const payments = await prisma.payment.findMany({ where: { userId: user.id } })
-  const totalSpent = payments.reduce((sum, p) => sum + p.amount, 0)
 
   return NextResponse.json({
     id: user.id,
@@ -23,8 +25,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     email: user.email,
     role: user.role,
     status: user.status,
-    orders: ordersCount,
-    totalSpent,
+    orders: user._count.orders,
+    totalSpent: user.payments.reduce((sum, p) => sum + p.amount, 0),
     joined: user.registeredAt.toLocaleDateString("es-AR"),
     phone: user.phone,
     level: user.level,
@@ -43,6 +45,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const user = await prisma.user.findUnique({ where: { id } })
   if (!user) {
     return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 })
+  }
+
+  if (id === auth.userId && role !== undefined && role !== "admin") {
+    return NextResponse.json({ message: "No puedes cambiar tu propio rol" }, { status: 400 })
+  }
+
+  if (role !== undefined && role === "user" && user.role === "admin") {
+    const adminCount = await prisma.user.count({ where: { role: "admin" } })
+    if (adminCount <= 1) {
+      return NextResponse.json({ message: "No se puede desactivar el último admin" }, { status: 400 })
+    }
   }
 
   const validRoles = ["user", "admin"]
@@ -80,6 +93,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const user = await prisma.user.findUnique({ where: { id } })
   if (!user) {
     return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 })
+  }
+
+  if (id === auth.userId) {
+    return NextResponse.json({ message: "No puedes bloquearte a ti mismo" }, { status: 400 })
   }
 
   const newStatus = user.status === "activo" ? "bloqueado" : "activo"

@@ -2,13 +2,40 @@
 import { prisma } from '@/lib/prisma'
 import { hashPassword, comparePassword, generateAccessToken, createRefreshToken, verifyAccessToken, revokeRefreshToken } from '@/lib/auth'
 
+const loginAttempts = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = loginAttempts.get(ip)
+
+  if (!record || now > record.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + 60_000 })
+    return true
+  }
+
+  if (record.count >= 5) return false
+
+  record.count++
+  return true
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown'
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ message: 'Demasiados intentos. Intenta de nuevo en un minuto.' }, { status: 429 })
+    }
+
     const body = await request.json()
     const { email, password, name } = body
 
     if (!email || !password) {
       return NextResponse.json({ message: 'Email y contraseña son requeridos' }, { status: 400 })
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ message: 'Email inválido' }, { status: 400 })
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } })
@@ -62,6 +89,10 @@ export async function POST(request: NextRequest) {
 
     if (!name) {
       return NextResponse.json({ message: 'El nombre es requerido para registrarse' }, { status: 400 })
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json({ message: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 })
     }
 
     const passwordHash = await hashPassword(password)

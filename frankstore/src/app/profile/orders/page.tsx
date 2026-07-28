@@ -100,7 +100,7 @@ export default function OrdersPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        {order.status === "enviado" && (
+                        {order.status === "enviada" && (
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                             <Truck className="h-4 w-4" />
                           </Button>
@@ -213,7 +213,7 @@ export default function OrdersPage() {
                 <Button variant="outline" className="flex-1 rounded-full">
                   <Download className="mr-1 h-4 w-4" /> Descargar Factura
                 </Button>
-                {selectedOrder.status === "enviado" && (
+                {selectedOrder.status === "enviada" && (
                   <Button variant="outline" className="flex-1 rounded-full">
                     <Truck className="mr-1 h-4 w-4" /> Seguir Envio
                   </Button>
