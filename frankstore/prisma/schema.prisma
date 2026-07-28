@@ -33,8 +33,6 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
-  @@map("categories")
 }
 
 model Product {
@@ -55,7 +53,6 @@ model Product {
   updatedAt   DateTime  @updatedAt
 
   @@index([categoryId])
-  @@map("products")
 }
 
 model Variant {
@@ -64,8 +61,6 @@ model Variant {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   size      String?
   color     String?
-
-  @@map("variants")
 }
 
 model User {
@@ -95,8 +90,6 @@ model User {
   refreshTokens    RefreshToken[]
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-
-  @@map("users")
 }
 
 model RefreshToken {
@@ -108,7 +101,6 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
-  @@map("refresh_tokens")
 }
 
 model Order {
@@ -127,7 +119,6 @@ model Order {
   updatedAt       DateTime    @updatedAt
 
   @@index([userId])
-  @@map("orders")
 }
 
 model OrderItem {
@@ -142,8 +133,6 @@ model OrderItem {
   variantId String?
   size      String?
   color     String?
-
-  @@map("order_items")
 }
 
 model Address {
@@ -160,7 +149,6 @@ model Address {
   createdAt  DateTime @default(now())
 
   @@index([userId])
-  @@map("addresses")
 }
 
 model Favorite {
@@ -172,7 +160,6 @@ model Favorite {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
-  @@map("favorites")
 }
 
 model Payment {
@@ -189,5 +176,4 @@ model Payment {
   date          DateTime @default(now())
 
   @@index([userId])
-  @@map("payments")
 }
