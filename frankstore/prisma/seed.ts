@@ -61,6 +61,24 @@ async function main() {
   })
   console.log("Admin created")
 
+  const jhonPassword = await bcrypt.hash("admin.26", 12)
+  await prisma.user.create({
+    data: {
+      id: "adm_002",
+      name: "Jhon",
+      lastName: "Admin",
+      email: "jhonadmin@frankstore.com",
+      phone: "+54 11 555 0001",
+      level: "Premium",
+      role: "admin",
+      status: "activo",
+      language: "es",
+      currency: "ARS",
+      passwordHash: jhonPassword,
+    },
+  })
+  console.log("Jhon Admin created")
+
   const categories = await Promise.all([
     prisma.category.create({ data: { id: "cat_ropa", name: "Ropa", slug: "ropa", image: "/images/category-ropa.jpg" } }),
     prisma.category.create({ data: { id: "cat_imperdibles", name: "Imperdibles", slug: "imperdibles", image: "/images/category-imperdibles.jpg" } }),
