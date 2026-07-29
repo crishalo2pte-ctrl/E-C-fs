@@ -19,6 +19,7 @@ export default async function EditarProductoPage(props: { params: Promise<{ id: 
     description: product.description,
     price: product.price,
     image: product.image,
+    images: product.images,
     categoryId: product.categoryId,
     featured: product.featured,
     bestSeller: product.bestSeller,

@@ -53,6 +53,7 @@ function LoginForm() {
       localStorage.setItem('user_data', JSON.stringify(data.user))
       
       if (data.user.role === 'admin') {
+        localStorage.setItem("admin_session", btoa(JSON.stringify(data.user)))
         router.push('/admin')
       } else if (mode === 'register') {
         router.push('/profile')

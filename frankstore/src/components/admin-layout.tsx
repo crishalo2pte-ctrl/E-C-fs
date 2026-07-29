@@ -8,6 +8,7 @@ import {
   Package,
   CreditCard,
   Users,
+  FolderTree,
   ChevronLeft,
   LogOut,
 } from "lucide-react"
@@ -20,6 +21,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/productos", label: "Productos", icon: Package },
+  { href: "/admin/categorias", label: "Categorías", icon: FolderTree },
   { href: "/admin/pagos", label: "Pagos", icon: CreditCard },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
 ]
@@ -51,21 +53,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     const s = getSession()
     setSession(s)
 
-    if (s && pathname === "/admin/login") {
-      router.replace("/admin")
-    } else if (!s && pathname !== "/admin/login") {
-      router.replace("/admin/login")
+    if (!s) {
+      router.replace("/login")
     }
   }, [router, pathname])
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" }).catch(() => {})
     localStorage.removeItem("admin_session")
-    router.replace("/admin/login")
-  }
-
-  if (pathname === "/admin/login") {
-    return <>{children}</>
+    router.replace("/login")
   }
 
   if (!session) {
