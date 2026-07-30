@@ -3,10 +3,11 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react"
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useCart } from "@/context/cart-context"
 import { mainNavLinks } from "@/lib/navigation"
 
@@ -16,6 +17,23 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { totalItems } = useCart()
+  const [mounted, setMounted] = useState(false)
+  const [user, setUser] = useState<{ name: string; lastName?: string } | null>(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token")
+    if (token) {
+      const raw = localStorage.getItem("user_data")
+      if (raw) {
+        try {
+          setUser(JSON.parse(raw))
+        } catch {
+          setUser(null)
+        }
+      }
+    }
+    setMounted(true)
+  }, [])
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()
@@ -92,11 +110,24 @@ export function Header() {
               <Search className="h-4 w-4" />
             </Button>
           )}
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/login">
-              <User className="h-4 w-4" />
-            </Link>
-          </Button>
+          {mounted && user ? (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/profile">
+                <Avatar size="sm">
+                  <AvatarFallback className="text-xs font-medium">
+                    {user.name.charAt(0)}
+                    {user.lastName?.charAt(0) ?? ""}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/login">
+                <User className="h-4 w-4" />
+              </Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" asChild>
             <Link href="/checkout">
               <span className="relative">

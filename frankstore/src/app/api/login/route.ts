@@ -1,11 +1,11 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, comparePassword, generateAccessToken, createRefreshToken, verifyAccessToken, revokeRefreshToken } from '@/lib/auth'
+import { hashPassword, comparePassword, generateAccessToken, createRefreshToken, verifyAccessToken, verifyRefreshToken, revokeRefreshToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name } = body
+    const { email, password, name, lastName } = body
 
     if (!email || !password) {
       return NextResponse.json({ message: 'Email y contraseña son requeridos' }, { status: 400 })
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     const newUser = await prisma.user.create({
       data: {
         name,
-        lastName: '',
+        lastName: lastName || '',
         email,
         phone: '',
         passwordHash,
@@ -153,14 +153,24 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value
+  let token = request.cookies.get('auth_token')?.value
 
   if (!token) {
+    const refreshToken = request.cookies.get('refresh_token')?.value
+    if (refreshToken) {
+      const rotated = await tryRefresh(refreshToken)
+      if (rotated) return rotated
+    }
     return NextResponse.json({ user: null }, { status: 401 })
   }
 
-  const decoded = verifyAccessToken(token)
+  let decoded = verifyAccessToken(token)
   if (!decoded) {
+    const refreshToken = request.cookies.get('refresh_token')?.value
+    if (refreshToken) {
+      const rotated = await tryRefresh(refreshToken)
+      if (rotated) return rotated
+    }
     return NextResponse.json({ user: null }, { status: 401 })
   }
 
@@ -183,6 +193,72 @@ export async function GET(request: NextRequest) {
       avatar: user.avatar,
     },
   })
+}
+
+async function tryRefresh(refreshToken: string): Promise<NextResponse | null> {
+  const decoded = verifyRefreshToken(refreshToken)
+  if (!decoded) return null
+
+  const stored = await prisma.refreshToken.findUnique({
+    where: { token: refreshToken },
+  })
+  if (!stored) return null
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+  })
+  if (!user) return null
+
+  await revokeRefreshToken(refreshToken)
+
+  const newAccessToken = generateAccessToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  })
+  const newRefreshToken = await createRefreshToken(user.id)
+
+  const response = NextResponse.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      level: user.level,
+      avatar: user.avatar,
+    },
+  })
+
+  response.cookies.set('auth_token', newAccessToken, {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60,
+  })
+  response.cookies.set('refresh_token', newRefreshToken, {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 30,
+  })
+
+  if (user.role === 'admin') {
+    response.cookies.set('admin_token', newAccessToken, {
+      path: '/admin',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60,
+    })
+    response.cookies.set('admin_refresh_token', newRefreshToken, {
+      path: '/admin',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+    })
+  }
+
+  return response
 }
 
 export async function DELETE(request: NextRequest) {

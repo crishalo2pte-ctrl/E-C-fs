@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { categoryLinks } from "@/lib/navigation"
+import { socialLinks } from "@/lib/social"
 
 export function Footer() {
   return (
@@ -54,21 +55,18 @@ export function Footer() {
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider">Síguenos</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>
-                <a href="#" className="transition-colors hover:text-white">
-                  Instagram
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition-colors hover:text-white">
-                  Facebook
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition-colors hover:text-white">
-                  TikTok
-                </a>
-              </li>
+              {socialLinks.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition-colors hover:text-white"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

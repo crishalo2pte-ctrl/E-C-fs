@@ -16,6 +16,7 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -38,7 +39,7 @@ function LoginForm() {
         body: JSON.stringify({
           email,
           password,
-          ...(mode === 'register' && { name, role: 'user' })
+          ...(mode === 'register' && { name, lastName, role: 'user' })
         })
       })
 
@@ -60,7 +61,7 @@ function LoginForm() {
       } else {
         const stored = localStorage.getItem('redirectPath')
         localStorage.removeItem('redirectPath')
-        router.push(stored || '/')
+        router.push(stored || '/profile')
       }
       
     } catch (error) {
@@ -94,21 +95,38 @@ function LoginForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="name">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-9 bg-white"
-                    required
-                  />
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="name">Nombre</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="John"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="pl-9 bg-white"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="lastName">Apellido</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Doe"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="pl-9 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
             )}
             
             <div className="space-y-2">

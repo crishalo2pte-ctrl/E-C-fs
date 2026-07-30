@@ -43,7 +43,7 @@ function loadProfileFromStorage(): UserProfile {
 
 async function fetchProfileFromAPI(): Promise<UserProfile | null> {
   try {
-    const res = await fetch("/api/profile")
+    const res = await fetch("/api/profile", { credentials: "include" })
     if (!res.ok) return null
     const data = await res.json()
     return {
@@ -99,6 +99,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           name: profile.name,
           lastName: profile.lastName,
+          email: profile.email,
           phone: profile.phone,
           birthDate: profile.birthDate,
         }),

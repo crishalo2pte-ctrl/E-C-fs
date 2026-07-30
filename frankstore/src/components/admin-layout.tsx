@@ -59,8 +59,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }, [router, pathname])
 
   const handleLogout = async () => {
+    await fetch("/api/login", { method: "DELETE" }).catch(() => {})
     await fetch("/api/admin/logout", { method: "POST" }).catch(() => {})
     localStorage.removeItem("admin_session")
+    localStorage.removeItem("auth_token")
+    localStorage.removeItem("user_data")
     router.replace("/login")
   }
 
@@ -113,9 +116,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </ScrollArea>
         <div className="border-t p-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">{initials}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">{initials}</AvatarFallback>
+              </Avatar>
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-background" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{session.name}</p>
               <p className="text-xs text-muted-foreground truncate">{session.email}</p>
