@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   User, Package, MapPin, Heart, Settings, LogOut, ChevronLeft,
 } from "lucide-react"
@@ -10,14 +10,23 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { profileData } from "@/lib/profile-data"
+import { useProfile } from "@/context/profile-context"
+import { useAuth } from "@/context/auth-context"
 import { profileNavItems } from "@/lib/profile-nav"
 
 export function ProfileSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { profile } = useProfile()
+  const { logout } = useAuth()
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
+  }
 
   return (
     <>
@@ -32,13 +41,13 @@ export function ProfileSidebar() {
           <div className="flex flex-col items-center px-4 mb-6">
             <Avatar className="h-20 w-20 mb-3">
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
-                {profileData.name.charAt(0)}{profileData.lastName.charAt(0)}
+                {profile.name.charAt(0)}{profile.lastName.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <p className="font-semibold text-sm">{profileData.name} {profileData.lastName}</p>
-            <p className="text-xs text-muted-foreground">{profileData.email}</p>
+            <p className="font-semibold text-sm">{profile.name} {profile.lastName}</p>
+            <p className="text-xs text-muted-foreground">{profile.email}</p>
             <span className="mt-2 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-              {profileData.level}
+              {profile.level}
             </span>
           </div>
           <Separator className="mb-2" />
@@ -65,7 +74,7 @@ export function ProfileSidebar() {
           </nav>
         </ScrollArea>
         <div className="border-t p-3">
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive">
+          <button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive">
             <LogOut className="h-4 w-4" />
             Cerrar Sesión
           </button>

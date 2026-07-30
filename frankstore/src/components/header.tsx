@@ -7,7 +7,9 @@ import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useCart } from "@/context/cart-context"
+import { useAuth } from "@/context/auth-context"
 import { mainNavLinks } from "@/lib/navigation"
 
 export function Header() {
@@ -16,6 +18,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { totalItems } = useCart()
+  const { user, isAuthenticated, isLoading } = useAuth()
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()
@@ -92,11 +95,24 @@ export function Header() {
               <Search className="h-4 w-4" />
             </Button>
           )}
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/login">
-              <User className="h-4 w-4" />
-            </Link>
-          </Button>
+          {!isLoading && isAuthenticated && user ? (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/profile">
+                <Avatar size="sm">
+                  <AvatarFallback className="text-xs font-medium">
+                    {user.name.charAt(0)}
+                    {user.lastName?.charAt(0) ?? ""}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/login">
+                <User className="h-4 w-4" />
+              </Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" asChild>
             <Link href="/checkout">
               <span className="relative">

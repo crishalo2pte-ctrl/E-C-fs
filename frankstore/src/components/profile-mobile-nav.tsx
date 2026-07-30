@@ -1,14 +1,22 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { User, Package, MapPin, Heart, Settings } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { User, Package, MapPin, Heart, Settings, LogOut } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/context/auth-context"
 import { profileNavItems, isProfileNavActive } from "@/lib/profile-nav"
 
 export function ProfileMobileNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
+  }
 
   return (
     <div className="sticky top-0 z-40 lg:hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -32,6 +40,13 @@ export function ProfileMobileNav() {
             </Link>
           )
         })}
+        <button
+          onClick={handleLogout}
+          className="flex flex-1 flex-col items-center gap-1 px-3 py-3 text-xs font-medium text-muted-foreground transition-colors min-w-[64px] hover:text-destructive"
+        >
+          <LogOut className="h-4 w-4" />
+          Salir
+        </button>
       </nav>
     </div>
   )

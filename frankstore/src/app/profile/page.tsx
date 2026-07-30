@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Package, Heart, MapPin, TrendingUp, Calendar, ShoppingCart,
 } from "lucide-react"
@@ -30,6 +30,18 @@ export default function ProfilePage() {
     phone: profile.phone,
     birthDate: profile.birthDate,
   })
+
+  useEffect(() => {
+    if (isLoaded) {
+      setForm({
+        name: profile.name,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone,
+        birthDate: profile.birthDate,
+      })
+    }
+  }, [isLoaded])
 
   const totalSpent = orders
     .filter((o) => o.status !== "cancelada")
