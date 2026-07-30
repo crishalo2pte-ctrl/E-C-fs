@@ -5,17 +5,16 @@ import { usePathname, useRouter } from "next/navigation"
 import { User, Package, MapPin, Heart, Settings, LogOut } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/context/auth-context"
 import { profileNavItems, isProfileNavActive } from "@/lib/profile-nav"
 
 export function ProfileMobileNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const { logout } = useAuth()
 
   const handleLogout = async () => {
-    await fetch("/api/login", { method: "DELETE" }).catch(() => {})
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_data")
-    localStorage.removeItem("admin_session")
+    await logout()
     router.push("/login")
   }
 

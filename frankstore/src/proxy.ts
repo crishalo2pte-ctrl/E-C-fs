@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { jwtVerify } from "jose"
+import { verifyAccessToken } from "@/lib/auth"
 
 const ADMIN_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "")
 
@@ -21,11 +22,30 @@ export default async function proxy(request: NextRequest) {
     } catch {
       return NextResponse.redirect(new URL("/login", request.url))
     }
+
+    return NextResponse.next()
+  }
+
+  if (pathname.startsWith("/profile")) {
+    const token = request.cookies.get("auth_token")?.value
+
+    if (!token) {
+      const loginUrl = new URL("/login", request.url)
+      loginUrl.searchParams.set("from", pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    const decoded = verifyAccessToken(token)
+    if (!decoded) {
+      const loginUrl = new URL("/login", request.url)
+      loginUrl.searchParams.set("from", pathname)
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/profile/:path*"],
 }

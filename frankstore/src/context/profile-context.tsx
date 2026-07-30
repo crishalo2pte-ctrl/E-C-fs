@@ -8,6 +8,18 @@ import type { UserProfile } from "@/lib/profile-data"
 
 const STORAGE_KEY = "frankstore-profile"
 
+const EMPTY_PROFILE: UserProfile = {
+  id: "",
+  name: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  avatar: "",
+  level: "Silver",
+  registeredAt: "",
+  birthDate: "",
+}
+
 const DEFAULT_PROFILE: UserProfile = {
   id: "usr_001",
   name: "Diego",
@@ -63,12 +75,18 @@ async function fetchProfileFromAPI(): Promise<UserProfile | null> {
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE)
+  const [profile, setProfile] = useState<UserProfile>(EMPTY_PROFILE)
   const [isEditing, setIsEditing] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
     async function load() {
+      const token = localStorage.getItem("auth_token")
+      if (!token) {
+        setProfile(EMPTY_PROFILE)
+        setIsLoaded(true)
+        return
+      }
       const apiProfile = await fetchProfileFromAPI()
       if (apiProfile) {
         setProfile(apiProfile)
@@ -79,6 +97,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setIsLoaded(true)
     }
     load()
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "auth_token") load()
+    }
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
   }, [])
 
   useEffect(() => {

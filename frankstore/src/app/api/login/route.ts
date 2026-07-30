@@ -228,6 +228,7 @@ async function tryRefresh(refreshToken: string): Promise<NextResponse | null> {
       level: user.level,
       avatar: user.avatar,
     },
+    token: newAccessToken,
   })
 
   response.cookies.set('auth_token', newAccessToken, {

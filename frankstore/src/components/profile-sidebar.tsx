@@ -11,21 +11,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useProfile } from "@/context/profile-context"
+import { useAuth } from "@/context/auth-context"
 import { profileNavItems } from "@/lib/profile-nav"
 
 export function ProfileSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { profile } = useProfile()
+  const { logout } = useAuth()
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href)
 
   const handleLogout = async () => {
-    await fetch("/api/login", { method: "DELETE" }).catch(() => {})
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_data")
-    localStorage.removeItem("admin_session")
+    await logout()
     router.push("/login")
   }
 

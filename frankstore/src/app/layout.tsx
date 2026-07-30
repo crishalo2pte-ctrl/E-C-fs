@@ -4,6 +4,7 @@ import "./globals.css"
 
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { AuthProvider } from "@/context/auth-context"
 import { CartProvider } from "@/context/cart-context"
 import { JsonLd } from "@/components/json-ld"
 
@@ -70,12 +71,14 @@ export default function RootLayout({
         <meta name="ICBM" content="-31.4201, -64.1888" />
       </head>
       <body className="min-h-full flex flex-col">
-        <CartProvider>
-          <JsonLd />
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <JsonLd />
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   )
