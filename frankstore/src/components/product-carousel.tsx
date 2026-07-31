@@ -22,6 +22,7 @@ export function ProductCarousel() {
 
   const products = (data?.products ?? []).slice(0, CAROUSEL_LIMIT)
   const [current, setCurrent] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
 
   const next = () => setCurrent((c) => (c + 1) % (products.length || 1))
   const prev = () => setCurrent((c) => (c - 1 + products.length) % (products.length || 1))
@@ -29,10 +30,10 @@ export function ProductCarousel() {
   useEffect(() => {
     if (products.length === 0) return
     const timer = setInterval(() => {
-      setCurrent((c) => (c + 1) % products.length)
-    }, 1500)
+      if (!isHovered) setCurrent((c) => (c + 1) % products.length)
+    }, 5000)
     return () => clearInterval(timer)
-  }, [products.length])
+  }, [products.length, isHovered])
 
   if (isLoading) {
     return (
@@ -50,7 +51,11 @@ export function ProductCarousel() {
   const product = products[safeIndex]
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
+    <section
+      className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
         <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="space-y-4">

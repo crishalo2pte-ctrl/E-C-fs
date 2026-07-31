@@ -26,7 +26,7 @@ export function ProfileInnerLayout({ children }: { children: ReactNode }) {
 
   return (
     <ProfileProvider>
-      <div className="min-h-screen bg-[#FAFAFA]">
+      <div className="min-h-dvh bg-[#FAFAFA]">
         <ProfileMobileNav />
         <ProfileSidebar />
         <main className="lg:pl-60">

@@ -255,9 +255,10 @@ export function AdminProductForm({ product, categories }: AdminProductFormProps)
                     <button
                       type="button"
                       onClick={() => removeImage(i)}
-                      className="absolute top-1 right-1 rounded-full bg-destructive p-1 text-white shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Quitar imagen ${i + 1}`}
+                      className="absolute top-1 right-1 flex size-8 items-center justify-center rounded-full bg-destructive text-white shadow transition-opacity"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}

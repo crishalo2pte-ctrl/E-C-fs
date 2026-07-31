@@ -109,7 +109,11 @@ export default function CheckoutPage() {
 
     const msg = buildWhatsAppMessage(items, totalPrice, form)
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`
-    window.open(url, "_blank")
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      window.open(url, "_blank")
+    } else {
+      window.location.href = url
+    }
     setLastOrder({ items, total: totalPrice })
     setSuccess(true)
     clearCart()

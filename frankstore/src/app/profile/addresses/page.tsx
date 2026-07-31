@@ -165,7 +165,7 @@ export default function AddressesPage() {
               <label className="text-sm font-medium">Dirección</label>
               <Input placeholder="Calle, número, apto" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Ciudad</label>
                 <Input placeholder="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
@@ -175,7 +175,7 @@ export default function AddressesPage() {
                 <Input placeholder="Departamento" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Código Postal</label>
                 <Input placeholder="000000" value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} />

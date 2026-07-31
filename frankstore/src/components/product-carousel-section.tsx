@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
-import Link from "next/link"
+import { useEffect, useState, useCallback } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { Product } from "@/lib/products"
 import { ProductCard } from "@/components/product-card"
@@ -17,10 +16,9 @@ interface ProductCarouselSectionProps {
 export function ProductCarouselSection({ title, products, href }: ProductCarouselSectionProps) {
   const [current, setCurrent] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [visibleCount, setVisibleCount] = useState(3)
 
-  const visibleCount = typeof window !== "undefined" && window.innerWidth < 768 ? 2 : 3
-  const totalSlides = Math.ceil(products.length / visibleCount)
+  const totalSlides = Math.max(1, Math.ceil(products.length / visibleCount))
 
   const next = useCallback(() => {
     setCurrent((c) => (c + 1) % totalSlides)
@@ -33,25 +31,22 @@ export function ProductCarouselSection({ title, products, href }: ProductCarouse
   useEffect(() => {
     const timer = setInterval(() => {
       if (!isHovered) next()
-    }, 3000)
-    intervalRef.current = timer
+    }, 5000)
     return () => clearInterval(timer)
   }, [isHovered, next])
 
   useEffect(() => {
-    const handleResize = () => {
-      const newVisibleCount = window.innerWidth < 768 ? 2 : 3
-      const newTotalSlides = Math.ceil(products.length / newVisibleCount)
-      setCurrent((c) => Math.min(c, newTotalSlides - 1))
+    const update = () => {
+      const count = window.innerWidth < 768 ? 2 : 3
+      setVisibleCount(count)
+      setCurrent((c) => Math.min(c, Math.max(0, Math.ceil(products.length / count) - 1)))
     }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
   }, [products.length])
 
   if (products.length === 0) return null
-
-  const startIndex = current * visibleCount
-  const visibleProducts = products.slice(startIndex, startIndex + visibleCount)
 
   return (
     <section className="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
@@ -59,15 +54,19 @@ export function ProductCarouselSection({ title, products, href }: ProductCarouse
       <div className="relative">
         <div className="flex gap-6 overflow-hidden">
           <div
-            className="flex gap-6 transition-none duration-0"
+            className="flex gap-6 transition-transform duration-500 ease-out"
             style={{
               transform: `translateX(-${current * (100 / visibleCount)}%)`,
             }}
           >
-            {visibleProducts.map((product) => (
+            {products.map((product) => (
               <div
                 key={product.id}
-                className={`flex-shrink-0 basis-[calc(100%/${visibleCount})] max-w-[calc(100%/${visibleCount})]`}
+                className="flex-shrink-0"
+                style={{
+                  flexBasis: `${100 / visibleCount}%`,
+                  maxWidth: `${100 / visibleCount}%`,
+                }}
               >
                 <ProductCard product={product} />
               </div>

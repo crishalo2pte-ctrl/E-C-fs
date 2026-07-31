@@ -29,7 +29,7 @@ export function ProfileMobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 px-3 py-3 text-xs font-medium transition-colors min-w-[64px]",
+                "flex flex-1 flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition-colors min-w-[52px]",
                 active
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground"
@@ -42,7 +42,7 @@ export function ProfileMobileNav() {
         })}
         <button
           onClick={handleLogout}
-          className="flex flex-1 flex-col items-center gap-1 px-3 py-3 text-xs font-medium text-muted-foreground transition-colors min-w-[64px] hover:text-destructive"
+          className="flex flex-1 flex-col items-center gap-1 px-2 py-3 text-xs font-medium text-muted-foreground transition-colors min-w-[52px] hover:text-destructive"
         >
           <LogOut className="h-4 w-4" />
           Salir

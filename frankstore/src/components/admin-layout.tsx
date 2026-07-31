@@ -84,7 +84,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     .slice(0, 2)
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
+    <div className="flex min-h-dvh bg-muted/30">
       <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
         <div className="flex h-16 items-center gap-2 border-b px-6">
           <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

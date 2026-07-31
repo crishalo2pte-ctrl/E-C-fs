@@ -173,7 +173,7 @@ export default function OrdersPage() {
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Fecha</p>
                   <p className="text-sm font-medium">{selectedOrder.date}</p>
