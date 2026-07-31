@@ -422,3 +422,4 @@ Import trace:
  GET /api/products 200 in 568ms (next.js: 14ms, application-code: 554ms)
  GET /api/products 200 in 1493ms (next.js: 9ms, application-code: 1484ms)
  GET /api/products 200 in 369ms (next.js: 5ms, application-code: 364ms)
+ GET /api/products 200 in 2.6s (next.js: 203ms, application-code: 2.4s)
