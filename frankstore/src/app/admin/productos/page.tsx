@@ -88,9 +88,9 @@ export default function AdminProductos() {
             <TableHeader>
               <TableRow>
                 <TableHead>Producto</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Precio</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead className="hidden lg:table-cell">Categoría</TableHead>
+                <TableHead className="hidden lg:table-cell">Precio</TableHead>
+                <TableHead className="hidden lg:table-cell">Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -112,9 +112,9 @@ export default function AdminProductos() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell className="font-medium">{formatARS(product.price)}</TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">{product.category}</TableCell>
+                  <TableCell className="hidden lg:table-cell font-medium">{formatARS(product.price)}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <Badge
                       variant={product.featured ? "default" : "secondary"}
                       className="rounded-full"

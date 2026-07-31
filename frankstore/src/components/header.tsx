@@ -20,19 +20,45 @@ export function Header() {
   const { totalItems } = useCart()
   const { user, isAuthenticated, isLoading } = useAuth()
 
+  const closeSearch = () => {
+    setIsSearchOpen(false)
+    setSearchQuery("")
+  }
+
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()
     const query = searchQuery.trim()
     if (query) {
       router.push(`/catalogo?search=${encodeURIComponent(query)}`)
-      setIsSearchOpen(false)
-      setSearchQuery("")
+      closeSearch()
     }
   }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {isSearchOpen && (
+          <form
+            onSubmit={handleSearch}
+            className="absolute inset-0 z-10 flex items-center gap-2 bg-background px-4 sm:px-6 md:hidden"
+          >
+            <input
+              type="text"
+              placeholder="Buscar productos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="min-w-0 flex-1 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+              autoFocus
+            />
+            <Button type="submit" variant="ghost" size="icon">
+              <Search className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={closeSearch}>
+              <X className="h-4 w-4" />
+            </Button>
+          </form>
+        )}
+
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
@@ -74,7 +100,7 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           {isSearchOpen ? (
-            <form onSubmit={handleSearch} className="flex items-center gap-2">
+            <form onSubmit={handleSearch} className="hidden items-center gap-2 md:flex">
               <input
                 type="text"
                 placeholder="Buscar productos..."
@@ -86,7 +112,7 @@ export function Header() {
               <Button type="submit" variant="ghost" size="icon">
                 <Search className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}>
+              <Button variant="ghost" size="icon" onClick={closeSearch}>
                 <X className="h-4 w-4" />
               </Button>
             </form>

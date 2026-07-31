@@ -81,8 +81,8 @@ export default function AdminCategorias() {
             <TableHeader>
               <TableRow>
                 <TableHead>Categoría</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Productos</TableHead>
+                <TableHead className="hidden lg:table-cell">Slug</TableHead>
+                <TableHead className="hidden lg:table-cell">Productos</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -101,8 +101,8 @@ export default function AdminCategorias() {
                       <span className="font-medium">{cat.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{cat.slug}</TableCell>
-                  <TableCell>{cat.productCount}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-muted-foreground">{cat.slug}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{cat.productCount}</TableCell>
                   <TableCell className="text-right">
                     <Link href={`/admin/categorias/${cat.id}/editar`}>
                       <Button variant="ghost" size="icon">

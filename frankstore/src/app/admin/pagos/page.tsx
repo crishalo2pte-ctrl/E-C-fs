@@ -24,14 +24,25 @@ const statusColor: Record<string, string> = {
 export default function AdminPagos() {
   const [search, setSearch] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null)
   const { payments, isLoading } = useAdminPayments()
 
-  const filtered = payments.filter(
-    (p) =>
-      p.user.toLowerCase().includes(search.toLowerCase()) ||
-      p.transactionId.toLowerCase().includes(search.toLowerCase()) ||
-      p.product.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = payments
+    .filter(
+      (p) =>
+        p.user.toLowerCase().includes(search.toLowerCase()) ||
+        p.transactionId.toLowerCase().includes(search.toLowerCase()) ||
+        p.product.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortDir) return 0
+      const cmp = a.transactionId.localeCompare(b.transactionId)
+      return sortDir === "asc" ? cmp : -cmp
+    })
+
+  const toggleSort = () => {
+    setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+  }
 
   const selected = payments.find((p) => p.id === selectedId) ?? null
 
@@ -110,17 +121,21 @@ export default function AdminPagos() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>
-                  <button className="flex items-center gap-1 font-medium">
+                <TableHead aria-sort={sortDir === "asc" ? "ascending" : sortDir === "desc" ? "descending" : "none"}>
+                  <button
+                    onClick={toggleSort}
+                    className="flex items-center gap-1 font-medium"
+                    aria-label="Ordenar por transacción"
+                  >
                     Transacción <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </TableHead>
                 <TableHead>Usuario</TableHead>
-                <TableHead>Producto</TableHead>
+                <TableHead className="hidden lg:table-cell">Producto</TableHead>
                 <TableHead>Monto</TableHead>
-                <TableHead>Método</TableHead>
+                <TableHead className="hidden lg:table-cell">Método</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Fecha</TableHead>
+                <TableHead className="hidden lg:table-cell">Fecha</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -137,15 +152,15 @@ export default function AdminPagos() {
                       <p className="text-xs text-muted-foreground">{p.email}</p>
                     </div>
                   </TableCell>
-                  <TableCell>{p.product}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{p.product}</TableCell>
                   <TableCell className="font-medium">{formatARS(p.amount)}</TableCell>
-                  <TableCell>{p.method}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{p.method}</TableCell>
                   <TableCell>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[p.status] ?? ""}`}>
                       {p.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{p.date}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-muted-foreground">{p.date}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

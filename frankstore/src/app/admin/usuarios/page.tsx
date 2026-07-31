@@ -73,10 +73,10 @@ export default function AdminUsuarios() {
             <TableHeader>
               <TableRow>
                 <TableHead>Usuario</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Órdenes</TableHead>
-                <TableHead>Total Gastado</TableHead>
-                <TableHead>Registro</TableHead>
+                <TableHead className="hidden lg:table-cell">Rol</TableHead>
+                <TableHead className="hidden lg:table-cell">Órdenes</TableHead>
+                <TableHead className="hidden lg:table-cell">Total Gastado</TableHead>
+                <TableHead className="hidden lg:table-cell">Registro</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -99,16 +99,16 @@ export default function AdminUsuarios() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <Badge variant={u.role === "admin" ? "default" : "secondary"} className="rounded-full">
                       {u.role}
                     </Badge>
                   </TableCell>
-                  <TableCell>{u.orders}</TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="hidden lg:table-cell">{u.orders}</TableCell>
+                  <TableCell className="hidden lg:table-cell font-medium">
                     <span className="font-medium">{formatARS(u.totalSpent)}</span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{u.joined}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-muted-foreground">{u.joined}</TableCell>
                   <TableCell>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       u.status === "activo" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
