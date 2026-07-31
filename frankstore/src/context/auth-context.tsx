@@ -1,10 +1,9 @@
 "use client"
 
 import {
-  createContext, useContext, useState, useEffect, useCallback,
+  createContext, useContext, useCallback, useSyncExternalStore,
   type ReactNode,
 } from "react"
-import { useRouter } from "next/navigation"
 
 interface User {
   id: string
@@ -27,50 +26,69 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const listeners = new Set<() => void>()
+
+function emitChange() {
+  listeners.forEach((listener) => listener())
+}
+
+let cachedUser: User | null | undefined
+let cachedToken: string | null | undefined
+
+function getSnapshot(): User | null {
+  if (typeof window === "undefined") return null
+  const token = localStorage.getItem("auth_token")
+  if (token === cachedToken && cachedUser !== undefined) {
+    return cachedUser
+  }
+  cachedToken = token
+  const raw = localStorage.getItem("user_data")
+  if (!token || !raw) {
+    cachedUser = null
+  } else {
+    try {
+      cachedUser = JSON.parse(raw) as User
+    } catch {
+      cachedUser = null
+    }
+  }
+  return cachedUser
+}
+
+function getServerSnapshot(): User | null {
+  return null
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback)
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === "auth_token" || e.key === "user_data" || e.key === null) {
+      cachedToken = undefined
+      cachedUser = undefined
+      emitChange()
+    }
+  }
+  window.addEventListener("storage", handleStorage)
+  return () => {
+    listeners.delete(callback)
+    window.removeEventListener("storage", handleStorage)
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const token = localStorage.getItem("auth_token")
-    if (token) {
-      const raw = localStorage.getItem("user_data")
-      if (raw) {
-        try {
-          setUser(JSON.parse(raw))
-        } catch {
-          localStorage.removeItem("auth_token")
-          localStorage.removeItem("user_data")
-        }
-      }
-    }
-    setIsLoading(false)
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "auth_token" || e.key === "user_data") {
-        const token = localStorage.getItem("auth_token")
-        if (token) {
-          const raw = localStorage.getItem("user_data")
-          if (raw) {
-            try {
-              setUser(JSON.parse(raw))
-              return
-            } catch {
-
-            }
-          }
-        }
-        setUser(null)
-      }
-    }
-    window.addEventListener("storage", handleStorage)
-    return () => window.removeEventListener("storage", handleStorage)
-  }, [])
+  const user = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const isLoading = useSyncExternalStore(
+    () => () => {},
+    () => false,
+    () => true
+  )
 
   const login = useCallback((token: string, userData: User) => {
     localStorage.setItem("auth_token", token)
     localStorage.setItem("user_data", JSON.stringify(userData))
-    setUser(userData)
+    cachedToken = token
+    cachedUser = userData
+    emitChange()
   }, [])
 
   const logout = useCallback(async () => {
@@ -82,13 +100,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("auth_token")
     localStorage.removeItem("user_data")
     localStorage.removeItem("admin_session")
-    setUser(null)
+    cachedToken = undefined
+    cachedUser = null
+    emitChange()
   }, [])
 
   const refreshUser = useCallback(async () => {
     const token = localStorage.getItem("auth_token")
     if (!token) {
-      setUser(null)
+      cachedToken = undefined
+      cachedUser = null
+      emitChange()
       return
     }
     try {
@@ -97,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await res.json()
         if (data.token) {
           localStorage.setItem("auth_token", data.token)
+          cachedToken = data.token
         }
         if (data.user) {
           const userData: User = {
@@ -109,7 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             avatar: data.user.avatar,
           }
           localStorage.setItem("user_data", JSON.stringify(userData))
-          setUser(userData)
+          cachedUser = userData
+          emitChange()
           return
         }
       }
@@ -126,11 +150,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar: data.avatar,
         }
         localStorage.setItem("user_data", JSON.stringify(userData))
-        setUser(userData)
+        cachedUser = userData
+        emitChange()
       } else if (resProfile.status === 401) {
         localStorage.removeItem("auth_token")
         localStorage.removeItem("user_data")
-        setUser(null)
+        cachedToken = undefined
+        cachedUser = null
+        emitChange()
       }
     } catch {
 

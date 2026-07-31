@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  let token = request.cookies.get('auth_token')?.value
+  const token = request.cookies.get('auth_token')?.value
 
   if (!token) {
     const refreshToken = request.cookies.get('refresh_token')?.value
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ user: null }, { status: 401 })
   }
 
-  let decoded = verifyAccessToken(token)
+  const decoded = verifyAccessToken(token)
   if (!decoded) {
     const refreshToken = request.cookies.get('refresh_token')?.value
     if (refreshToken) {

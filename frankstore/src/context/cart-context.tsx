@@ -1,7 +1,7 @@
 "use client"
 
 import {
-  createContext, useContext, useState, useEffect, useCallback,
+  createContext, useContext, useCallback, useSyncExternalStore,
   type ReactNode,
 } from "react"
 import type { Product } from "@/lib/products"
@@ -30,6 +30,14 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 const STORAGE_KEY = "frankstore-cart"
 
+const EMPTY_CART: CartItem[] = []
+
+const listeners = new Set<() => void>()
+
+function emitChange() {
+  listeners.forEach((listener) => listener())
+}
+
 function loadCart(): CartItem[] {
   if (typeof window === "undefined") return []
   try {
@@ -40,57 +48,89 @@ function loadCart(): CartItem[] {
   }
 }
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+let cachedItems: CartItem[] | null = null
 
-  useEffect(() => {
-    setItems(loadCart())
-    setIsLoading(false)
-  }, [])
+function getSnapshot(): CartItem[] {
+  if (cachedItems === null) {
+    cachedItems = loadCart()
+  }
+  return cachedItems
+}
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && !isLoading) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+function getServerSnapshot(): CartItem[] {
+  return EMPTY_CART
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback)
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY || e.key === null) {
+      cachedItems = loadCart()
+      emitChange()
     }
-  }, [items, isLoading])
+  }
+  window.addEventListener("storage", handleStorage)
+  return () => {
+    listeners.delete(callback)
+    window.removeEventListener("storage", handleStorage)
+  }
+}
+
+function updateItems(next: CartItem[]) {
+  cachedItems = next
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  } catch {
+  }
+  emitChange()
+}
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const isLoading = useSyncExternalStore(
+    () => () => {},
+    () => false,
+    () => true
+  )
 
   const addToCart = useCallback((product: Product, qty = 1) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.productId === product.id)
-      if (existing) {
-        return prev.map((i) =>
-          i.productId === product.id
-            ? { ...i, quantity: i.quantity + qty }
-            : i
+    const current = cachedItems ?? loadCart()
+    const existing = current.find((i) => i.productId === product.id)
+    if (existing) {
+      updateItems(
+        current.map((i) =>
+          i.productId === product.id ? { ...i, quantity: i.quantity + qty } : i
         )
-      }
-      return [
-        ...prev,
-        {
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity: qty,
-        },
-      ]
-    })
+      )
+      return
+    }
+    updateItems([
+      ...current,
+      {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: qty,
+      },
+    ])
   }, [])
 
   const removeFromCart = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId))
+    const current = cachedItems ?? loadCart()
+    updateItems(current.filter((i) => i.productId !== productId))
   }, [])
 
   const updateQuantity = useCallback((productId: string, qty: number) => {
     if (qty < 1) return
-    setItems((prev) =>
-      prev.map((i) => (i.productId === productId ? { ...i, quantity: qty } : i))
+    const current = cachedItems ?? loadCart()
+    updateItems(
+      current.map((i) => (i.productId === productId ? { ...i, quantity: qty } : i))
     )
   }, [])
 
   const clearCart = useCallback(() => {
-    setItems([])
+    updateItems([])
   }, [])
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)

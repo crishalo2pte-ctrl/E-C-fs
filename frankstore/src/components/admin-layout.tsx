@@ -54,14 +54,11 @@ function getSession(): AdminSession | null {
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [session, setSession] = useState<AdminSession | null>(getSession)
+  const [session] = useState<AdminSession | null>(getSession)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   useEffect(() => {
-    const s = getSession()
-    setSession(s)
-
-    if (!s) {
+    if (!getSession()) {
       router.replace("/login")
     }
   }, [router, pathname])

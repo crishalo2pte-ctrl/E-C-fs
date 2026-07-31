@@ -67,6 +67,14 @@ function buildWhatsAppMessage(items: ReturnType<typeof useCart>["items"], total:
 
 export default function CheckoutPage() {
   const { items, totalPrice, totalItems, isEmpty, isLoading, removeFromCart, updateQuantity, clearCart } = useCart()
+  const [form, setForm] = useState<FormData>({
+    name: "", email: "", phone: "", address: "", notes: "",
+  })
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [paymentMethod, setPaymentMethod] = useState<"pagofacil" | "mercadopago">("pagofacil")
+  const [processing, setProcessing] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [lastOrder, setLastOrder] = useState<{ items: CartItem[]; total: number } | null>(null)
 
   if (isLoading) {
     return (
@@ -86,15 +94,6 @@ export default function CheckoutPage() {
       </div>
     )
   }
-
-  const [form, setForm] = useState<FormData>({
-    name: "", email: "", phone: "", address: "", notes: "",
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [paymentMethod, setPaymentMethod] = useState<"pagofacil" | "mercadopago">("pagofacil")
-  const [processing, setProcessing] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [lastOrder, setLastOrder] = useState<{ items: CartItem[]; total: number } | null>(null)
 
   const updateField = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))

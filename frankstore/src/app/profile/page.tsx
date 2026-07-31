@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import {
   Package, Heart, MapPin, TrendingUp, Calendar, ShoppingCart,
 } from "lucide-react"
@@ -23,32 +22,12 @@ export default function ProfilePage() {
   const { orders } = useOrders()
   const { favorites } = useFavorites()
   const { addresses } = useAddresses()
-  const [form, setForm] = useState({
-    name: profile.name,
-    lastName: profile.lastName,
-    email: profile.email,
-    phone: profile.phone,
-    birthDate: profile.birthDate,
-  })
-
-  useEffect(() => {
-    if (isLoaded) {
-      setForm({
-        name: profile.name,
-        lastName: profile.lastName,
-        email: profile.email,
-        phone: profile.phone,
-        birthDate: profile.birthDate,
-      })
-    }
-  }, [isLoaded])
 
   const totalSpent = orders
     .filter((o) => o.status !== "cancelada")
     .reduce((s, o) => s + o.total, 0)
 
-  const handleInputChange = (field: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
+  const handleInputChange = (field: keyof typeof profile, value: string) => {
     updateProfile({ [field]: value })
   }
 
@@ -190,7 +169,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Nombre</label>
               <Input
-                value={form.name}
+                value={profile.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 disabled={!isEditing}
                 className="bg-white"
@@ -199,7 +178,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Apellido</label>
               <Input
-                value={form.lastName}
+                value={profile.lastName}
                 onChange={(e) => handleInputChange("lastName", e.target.value)}
                 disabled={!isEditing}
                 className="bg-white"
@@ -208,7 +187,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
               <Input
-                value={form.email}
+                value={profile.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 disabled={!isEditing}
                 className="bg-white"
@@ -217,7 +196,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Teléfono</label>
               <Input
-                value={form.phone}
+                value={profile.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 disabled={!isEditing}
                 className="bg-white"
@@ -226,7 +205,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Fecha de Nacimiento</label>
               <Input
-                value={form.birthDate}
+                value={profile.birthDate}
                 onChange={(e) => handleInputChange("birthDate", e.target.value)}
                 disabled={!isEditing}
                 className="bg-white"
