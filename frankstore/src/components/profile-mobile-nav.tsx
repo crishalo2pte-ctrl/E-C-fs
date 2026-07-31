@@ -19,7 +19,7 @@ export function ProfileMobileNav() {
   }
 
   return (
-    <div className="sticky top-16 z-40 lg:hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="sticky top-16 z-40 lg:hidden border-b bg-background supports-[color:color-mix(in_oklab,red_50%,white)]:bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="flex overflow-x-auto">
         {profileNavItems.map((item) => {
           const Icon = item.icon
