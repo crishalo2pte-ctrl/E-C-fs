@@ -39,7 +39,15 @@ export function ProductCard({ product }: ProductCardProps) {
               Destacado
             </Badge>
           )}
-          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); handleAdd(); }}
+            className="absolute bottom-3 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background text-primary shadow-md ring-1 ring-border transition active:scale-95 lg:hidden"
+            aria-label={added ? "Producto agregado al carrito" : "Agregar al carrito"}
+          >
+            {added ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
+          </button>
+          <div className="absolute inset-0 hidden items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 lg:flex">
             <Button variant="secondary" size="icon" onClick={(e) => { e.preventDefault(); handleAdd(); }}>
               {added ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
             </Button>

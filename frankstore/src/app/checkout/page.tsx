@@ -208,51 +208,107 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {items.map((item) => (
-                <div
-                  key={item.productId}
-                  className="flex items-center gap-4 rounded-lg bg-muted/30 p-3"
-                >
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-lg font-bold text-primary">
-                    {item.name.charAt(0)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      ${item.price.toLocaleString("es-AR")}
+                <div key={item.productId}>
+                  <div className="hidden items-center gap-4 rounded-lg bg-muted/30 p-3 sm:flex">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-lg font-bold text-primary">
+                      {item.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        ${item.price.toLocaleString("es-AR")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        aria-label={`Restar ${item.name}`}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center text-sm font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        aria-label={`Sumar ${item.name}`}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="w-20 text-right text-sm font-medium">
+                      ${(item.price * item.quantity).toLocaleString("es-AR")}
                     </p>
-                  </div>
-                  <div className="flex items-center gap-1">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
-                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                      className="h-8 w-8 shrink-0 text-destructive"
+                      onClick={() => removeFromCart(item.productId)}
+                      aria-label={`Eliminar ${item.name}`}
                     >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-8 text-center text-sm font-medium">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                    >
-                      <Plus className="h-3 w-3" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="w-20 text-right text-sm font-medium">
-                    ${(item.price * item.quantity).toLocaleString("es-AR")}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 text-destructive"
-                    onClick={() => removeFromCart(item.productId)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+
+                  <div className="rounded-lg bg-muted/30 p-4 sm:hidden">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-base font-bold text-primary">
+                        {item.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{item.name}</p>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          ${item.price.toLocaleString("es-AR")}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 shrink-0 text-destructive"
+                        onClick={() => removeFromCart(item.productId)}
+                        aria-label={`Eliminar ${item.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-4 border-t pt-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Subtotal</p>
+                        <p className="font-semibold">
+                          ${(item.price * item.quantity).toLocaleString("es-AR")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9"
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          aria-label={`Restar ${item.name}`}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-8 text-center text-sm font-medium">
+                          {item.quantity}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9"
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          aria-label={`Sumar ${item.name}`}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </CardContent>

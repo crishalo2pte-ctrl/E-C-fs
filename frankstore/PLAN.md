@@ -1,58 +1,39 @@
-# FrankStore — Plan de Avance
+# Plan de pre-deploy para Vercel
 
-## 1. Imágenes reales de productos
-- Subir imágenes a `/public/images/` o usar Unsplash API
-- Actualizar `src/lib/products.ts` con URLs reales
-- Considerar Cloudinary para upload y optimización
+## ~~Paso 1 — Arreglar el middleware~~ ✅
+- ~~Mover `src/proxy.ts` → `src/middleware.ts`~~ (No aplica — Next.js 16 usa `proxy.ts`, ya estaba bien).
 
-## 2. Conectar Prisma con PostgreSQL
-- Configurar `DATABASE_URL` en `.env`
-- Ejecutar `npx prisma migrate dev`
-- Crear seed con productos mock
-- Reemplazar `src/lib/products.ts` con queries Prisma
-- Crear API routes para operaciones CRUD
+## Paso 2 — Sincronizar imágenes del seed
+- Los nombres de archivo en `public/images/` no coinciden con los que guarda el seed (`/images/product-1.jpg`, etc.).
+- Opción A: Renombrar los archivos reales para que coincidan (ej: `buzo neegro.jpeg` → `product-1.jpg`).
+- Opción B: Actualizar `prisma/seed.ts` y `src/lib/products.ts` para usar los nombres reales.
 
-## 3. Autenticación real
-- Instalar NextAuth.js o Clerk
-- Login/Register con credenciales reales
-- Protección de rutas (profile, admin)
-- Sesiones persistentes
+## Paso 3 — Agregar favicon
+- `src/app/layout.tsx:54` referencia `/favicon.ico` pero no existe.
+- Solución: copiar o crear un favicon en `public/favicon.ico`, o cambiar la referencia a `file.svg` o `vercel.svg`.
 
-## 4. Carrito mejorado
-- Toast/notificación al agregar producto
-- Drawer/sheet del carrito desde el header
-- Qty selector en página de detalle
+## Paso 4 — Imágenes de categorías faltantes
+- El seed referencia `/images/category-ropa.jpg`, `/images/category-imperdibles.jpg`, etc.
+- Crear esas imágenes en `public/images/` o actualizar el seed para omitir `image` en categorías.
 
-## 5. Búsqueda funcional
-- Búsqueda en tiempo real por nombre/categoría
-- Debounce para no saturar
-- Página de resultados
+## Paso 5 — Agregar NEXT_PUBLIC_SITE_URL a Vercel
+- Ya hay fallback en el código, pero agregar la variable en el dashboard de Vercel:
+  - `NEXT_PUBLIC_SITE_URL` → `https://frankstore.com.ar` (o tu dominio)
 
-## 6. SEO y Metadata
-- Metadata dinámica por página
-- Sitemap.xml y robots.txt
-- Schema.org para productos
+## Paso 6 — Configurar variables de entorno en Vercel
+Agregar en Vercel Dashboard → Project Settings → Environment Variables:
+- `DATABASE_URL` — PostgreSQL en producción (Neon, Supabase, etc.)
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `JWT_SECRET`
+- `JWT_REFRESH_SECRET`
+- `NEXT_PUBLIC_SITE_URL`
 
-## 7. Deploy
-- Vercel (recomendado para Next.js)
-- Dominio personalizado
-- Variables de entorno
+## Paso 7 — Build de prueba
+- Ejecutar `npm run build` localmente para verificar que no hay errores de tipo.
+- Si hay errores, corregirlos antes de deployar.
 
-## 8. Performance
-- Lazy loading de imágenes
-- Suspense boundaries
-- Optimistic updates para carrito
-- Prefetching de rutas
-
-## Orden sugerido
-
-| # | Tarea | Tiempo estimado |
-|---|---|---|
-| 1 | Imágenes reales de productos | 1-2 horas |
-| 2 | Conectar Prisma + PostgreSQL | 4-6 horas |
-| 3 | Autenticación (NextAuth/Clerk) | 3-4 horas |
-| 4 | Toast notifications para carrito | 1 hora |
-| 5 | Drawer del carrito en header | 2 horas |
-| 6 | Búsqueda funcional | 2-3 horas |
-| 7 | SEO metadata | 2 horas |
-| 8 | Deploy en Vercel | 1 hora |
+## Paso 8 — Deployar a Vercel
+- `npx vercel` para primera vez, vincular repo.
+- O conectar el repo de GitHub desde Vercel Dashboard.
