@@ -226,11 +226,11 @@ export default function CheckoutPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-9 w-9"
                         onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                         aria-label={`Restar ${item.name}`}
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-4 w-4" />
                       </Button>
                       <span className="w-8 text-center text-sm font-medium">
                         {item.quantity}
@@ -238,11 +238,11 @@ export default function CheckoutPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-9 w-9"
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                         aria-label={`Sumar ${item.name}`}
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <p className="w-20 text-right text-sm font-medium">
@@ -251,7 +251,7 @@ export default function CheckoutPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 shrink-0 text-destructive"
+                      className="h-9 w-9 shrink-0 text-destructive"
                       onClick={() => removeFromCart(item.productId)}
                       aria-label={`Eliminar ${item.name}`}
                     >
@@ -273,7 +273,7 @@ export default function CheckoutPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 shrink-0 text-destructive"
+                        className="h-10 w-10 shrink-0 text-destructive"
                         onClick={() => removeFromCart(item.productId)}
                         aria-label={`Eliminar ${item.name}`}
                       >
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-9 w-9"
+                          className="h-10 w-10"
                           onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                           aria-label={`Restar ${item.name}`}
                         >
@@ -303,7 +303,7 @@ export default function CheckoutPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-9 w-9"
+                          className="h-10 w-10"
                           onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                           aria-label={`Sumar ${item.name}`}
                         >
