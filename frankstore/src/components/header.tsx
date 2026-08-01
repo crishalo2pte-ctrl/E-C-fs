@@ -2,15 +2,24 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, Search, ShoppingBag, User, X } from "lucide-react"
+import { ChevronRight, Flame, Home, LayoutGrid, Menu, Search, Shirt, ShoppingBag, Star, TrendingUp, User, X, type LucideIcon } from "lucide-react"
 import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useCart } from "@/context/cart-context"
 import { useAuth } from "@/context/auth-context"
 import { mainNavLinks } from "@/lib/navigation"
+
+const menuIcons: Record<string, LucideIcon> = {
+  "/": Home,
+  "/catalogo": LayoutGrid,
+  "/catalogo?cat=ropa": Shirt,
+  "/catalogo?cat=imperdibles": Flame,
+  "/catalogo?cat=coleccion-destacada": Star,
+  "/catalogo?cat=mas-vendidos": TrendingUp,
+}
 
 export function Header() {
   const router = useRouter()
@@ -66,19 +75,51 @@ export function Header() {
               <span className="sr-only">Menú</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72">
-            <nav className="mt-8 flex flex-col gap-4">
-{mainNavLinks.map((link) => (
+          <SheetContent side="left" className="w-72 p-0">
+            <SheetTitle className="sr-only">Menú principal</SheetTitle>
+            <div className="flex h-16 shrink-0 items-center border-b px-6">
+              <Link
+                href="/"
+                onClick={() => setIsMobileOpen(false)}
+                className="text-xl font-bold tracking-tight"
+              >
+                FRANK<span className="text-neon-gray">STORE</span>
+              </Link>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-6">
+              <p className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Categorías
+              </p>
+              <nav className="flex flex-col gap-1.5">
+                {mainNavLinks.map((link) => {
+                  const Icon = menuIcons[link.href] ?? LayoutGrid
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className="group flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+                    >
+                      <Icon className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                      {link.label}
+                      <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                    </Link>
+                  )
+                })}
+              </nav>
+            </div>
+            <div className="border-t px-6 py-4">
+              <p className="text-xs text-muted-foreground">
+                ¿Necesitás ayuda?{" "}
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  href="/contacto"
                   onClick={() => setIsMobileOpen(false)}
-                  className="text-lg font-medium transition-colors hover:text-primary"
+                  className="font-medium text-primary hover:underline"
                 >
-                  {link.label}
+                  Contactanos
                 </Link>
-              ))}
-            </nav>
+              </p>
+            </div>
           </SheetContent>
         </Sheet>
 
