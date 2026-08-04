@@ -9,6 +9,7 @@ import {
   CreditCard,
   Users,
   FolderTree,
+  GalleryHorizontal,
   ChevronLeft,
   LogOut,
   Menu,
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useAuth } from "@/context/auth-context"
 import {
   Sheet,
   SheetContent,
@@ -29,6 +31,7 @@ const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/productos", label: "Productos", icon: Package },
   { href: "/admin/categorias", label: "Categorías", icon: FolderTree },
+  { href: "/admin/carrusel", label: "Carrusel", icon: GalleryHorizontal },
   { href: "/admin/pagos", label: "Pagos", icon: CreditCard },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
 ]
@@ -54,7 +57,7 @@ function getSession(): AdminSession | null {
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [session] = useState<AdminSession | null>(getSession)
+  const { user, isAdmin, logout } = useAuth()
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   useEffect(() => {
@@ -64,13 +67,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }, [router, pathname])
 
   const handleLogout = async () => {
-    await fetch("/api/login", { method: "DELETE" }).catch(() => {})
+    await logout()
     await fetch("/api/admin/logout", { method: "POST" }).catch(() => {})
-    localStorage.removeItem("admin_session")
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_data")
     router.replace("/login")
   }
+
+  const session: AdminSession | null =
+    isAdmin && user
+      ? { id: user.id, name: user.name, email: user.email, role: user.role }
+      : null
 
   if (!session) {
     return <>{children}</>

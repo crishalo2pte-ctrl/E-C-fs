@@ -15,7 +15,7 @@ const REFRESH_INTERVAL = 30000
 
 export function ProductCarousel() {
   const { data, isLoading } = useSWR<{ products: Product[] }>(
-    "/api/products",
+    "/api/products?carousel=true",
     fetcher,
     { refreshInterval: REFRESH_INTERVAL, revalidateOnFocus: true }
   )

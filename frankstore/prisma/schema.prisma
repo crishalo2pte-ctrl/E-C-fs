@@ -47,6 +47,8 @@ model Product {
   category    Category  @relation(fields: [categoryId], references: [id])
   featured    Boolean   @default(false)
   bestSeller  Boolean   @default(false)
+  carousel    Boolean   @default(false)
+  carouselOrder Int     @default(0)
   variants    Variant[]
   favorites   Favorite[]
   createdAt   DateTime  @default(now())

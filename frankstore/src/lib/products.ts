@@ -9,6 +9,8 @@ export interface Product {
   categorySlug: string
   featured: boolean
   bestSeller: boolean
+  carousel?: boolean
+  carouselOrder?: number
 }
 
 export const products: Product[] = [

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronRight, Flame, Home, LayoutGrid, Menu, Search, Shirt, ShoppingBag, Star, TrendingUp, User, X, type LucideIcon } from "lucide-react"
+import { ChevronRight, Flame, Home, LayoutDashboard, LayoutGrid, Menu, Search, Shirt, ShoppingBag, Star, TrendingUp, User, X, type LucideIcon } from "lucide-react"
 import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -27,7 +27,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { totalItems } = useCart()
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading, isAdmin } = useAuth()
 
   const closeSearch = () => {
     setIsSearchOpen(false)
@@ -106,6 +106,17 @@ export function Header() {
                     </Link>
                   )
                 })}
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="group flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    <LayoutDashboard className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                    Panel Admin
+                    <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  </Link>
+                )}
               </nav>
             </div>
             <div className="border-t px-6 py-4">
@@ -137,6 +148,14 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Panel Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -164,7 +183,7 @@ export function Header() {
           )}
           {!isLoading && isAuthenticated && user ? (
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/profile">
+              <Link href={isAdmin ? "/admin" : "/profile"}>
                 <Avatar size="sm">
                   <AvatarFallback className="text-xs font-medium">
                     {user.name.charAt(0)}

@@ -18,6 +18,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
+  isAdmin: boolean
   isLoading: boolean
   login: (token: string, userData: User) => void
   logout: () => Promise<void>
@@ -47,7 +48,11 @@ function getSnapshot(): User | null {
     cachedUser = null
   } else {
     try {
-      cachedUser = JSON.parse(raw) as User
+      const parsed = JSON.parse(raw) as User
+      if (parsed.role !== "admin" && localStorage.getItem("admin_session")) {
+        parsed.role = "admin"
+      }
+      cachedUser = parsed
     } catch {
       cachedUser = null
     }
@@ -62,7 +67,12 @@ function getServerSnapshot(): User | null {
 function subscribe(callback: () => void) {
   listeners.add(callback)
   const handleStorage = (e: StorageEvent) => {
-    if (e.key === "auth_token" || e.key === "user_data" || e.key === null) {
+    if (
+      e.key === "auth_token" ||
+      e.key === "user_data" ||
+      e.key === "admin_session" ||
+      e.key === null
+    ) {
       cachedToken = undefined
       cachedUser = undefined
       emitChange()
@@ -77,6 +87,7 @@ function subscribe(callback: () => void) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const user = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const isAdmin = user?.role === "admin"
   const isLoading = useSyncExternalStore(
     () => () => {},
     () => false,
@@ -86,6 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((token: string, userData: User) => {
     localStorage.setItem("auth_token", token)
     localStorage.setItem("user_data", JSON.stringify(userData))
+    if (userData.role === "admin") {
+      localStorage.setItem("admin_session", btoa(JSON.stringify(userData)))
+    }
     cachedToken = token
     cachedUser = userData
     emitChange()
@@ -149,6 +163,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           level: data.level,
           avatar: data.avatar,
         }
+        if (data.role !== "admin" && localStorage.getItem("admin_session")) {
+          userData.role = "admin"
+        }
         localStorage.setItem("user_data", JSON.stringify(userData))
         cachedUser = userData
         emitChange()
@@ -169,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        isAdmin,
         isLoading,
         login,
         logout,

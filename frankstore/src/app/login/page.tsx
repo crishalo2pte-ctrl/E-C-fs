@@ -7,10 +7,12 @@ import { Mail, Lock, Eye, EyeOff, User, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/context/auth-context"
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { login } = useAuth()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
@@ -50,8 +52,7 @@ function LoginForm() {
 
       const data = await response.json()
       
-      localStorage.setItem('auth_token', data.token)
-      localStorage.setItem('user_data', JSON.stringify(data.user))
+      login(data.token, data.user)
       
       if (data.user.role === 'admin') {
         localStorage.setItem("admin_session", btoa(JSON.stringify(data.user)))

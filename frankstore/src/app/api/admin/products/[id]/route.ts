@@ -10,7 +10,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params
   const body = await request.json()
-  const { name, slug, description, price, image, images, categoryId, featured, bestSeller } = body
+  const { name, slug, description, price, image, images, categoryId, featured, bestSeller, carousel, carouselOrder } = body
 
   const product = await prisma.product.findUnique({ where: { id }, select: { images: true } })
 
@@ -37,6 +37,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       ...(categoryId !== undefined && { categoryId }),
       ...(featured !== undefined && { featured }),
       ...(bestSeller !== undefined && { bestSeller }),
+      ...(carousel !== undefined && { carousel }),
+      ...(carouselOrder !== undefined && { carouselOrder }),
     },
     include: { category: true },
   })
@@ -55,6 +57,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     categorySlug: updated.category.slug,
     featured: updated.featured,
     bestSeller: updated.bestSeller,
+    carousel: updated.carousel,
+    carouselOrder: updated.carouselOrder,
   })
 }
 

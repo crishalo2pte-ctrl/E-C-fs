@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search")
   const featured = searchParams.get("featured")
   const bestSeller = searchParams.get("bestseller")
+  const carousel = searchParams.get("carousel")
 
   const where: Record<string, unknown> = {}
 
@@ -29,10 +30,16 @@ export async function GET(request: NextRequest) {
     where.bestSeller = true
   }
 
+  if (carousel === "true") {
+    where.carousel = true
+  }
+
   const products = await prisma.product.findMany({
     where,
     include: { category: true },
-    orderBy: { createdAt: "desc" },
+    orderBy: carousel === "true"
+      ? [{ carouselOrder: "asc" }, { createdAt: "desc" }]
+      : { createdAt: "desc" },
   })
 
   const mapped = products.map((p) => ({
@@ -46,6 +53,8 @@ export async function GET(request: NextRequest) {
     categorySlug: p.category.slug,
     featured: p.featured,
     bestSeller: p.bestSeller,
+    carousel: p.carousel,
+    carouselOrder: p.carouselOrder,
   }))
 
   return NextResponse.json({ products: mapped })

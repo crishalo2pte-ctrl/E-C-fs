@@ -117,6 +117,8 @@ async function main() {
           ...p,
           image: `/images/product-${p.id}.jpg`,
           images: [`/images/product-${p.id}.jpg`],
+          carousel: p.featured === true,
+          carouselOrder: 0,
         },
       })
     )

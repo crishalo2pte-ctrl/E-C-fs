@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
     categoryId: p.categoryId,
     featured: p.featured,
     bestSeller: p.bestSeller,
+    carousel: p.carousel,
+    carouselOrder: p.carouselOrder,
     createdAt: p.createdAt.toISOString(),
   }))
 
@@ -51,6 +53,8 @@ export async function POST(request: NextRequest) {
       categoryId,
       featured: featured ?? false,
       bestSeller: bestSeller ?? false,
+      carousel: false,
+      carouselOrder: 0,
     },
     include: { category: true },
   })
@@ -69,5 +73,7 @@ export async function POST(request: NextRequest) {
     categorySlug: product.category.slug,
     featured: product.featured,
     bestSeller: product.bestSeller,
+    carousel: product.carousel,
+    carouselOrder: product.carouselOrder,
   })
 }

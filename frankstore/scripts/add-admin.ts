@@ -7,20 +7,21 @@ async function main() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
   const prisma = new PrismaClient({ adapter })
 
-  const existing = await prisma.user.findUnique({ where: { email: "jhonadmin@frankstore.com" } })
+  const email = "jhonfranco@frankstore.com"
+  const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
     console.log("El admin ya existe:", existing.email)
     await prisma.$disconnect()
     return
   }
 
-  const passwordHash = await bcrypt.hash("admin.26", 12)
+  const passwordHash = await bcrypt.hash("admin1", 12)
   const user = await prisma.user.create({
     data: {
       id: "adm_002",
       name: "Jhon",
-      lastName: "Admin",
-      email: "jhonadmin@frankstore.com",
+      lastName: "Franco",
+      email,
       phone: "+54 11 555 0001",
       level: "Premium",
       role: "admin",
